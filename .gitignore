@@ -1,0 +1,9 @@
+# Local/private docs
+docs/**/*.md
+
+# Generated local artifacts
+frontend/node_modules/
+frontend/dist/
+__pycache__/
+*.pyc
+.DS_Store
