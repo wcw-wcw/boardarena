@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { createGame, makeAiMove, makeHumanMove } from "./api/games";
+import { createGame, makeAiMove, makeHumanCellMove, makeHumanMove } from "./api/games";
 import { ConnectFourBoard } from "./components/ConnectFourBoard";
 import { GameSidebar } from "./components/GameSidebar";
-import { gameCatalog } from "./games/connect4/registry";
-import type { AiMetadata, AiStrategy, GameMode, GameState } from "./games/connect4/types";
-import { modeLabel, winnerText } from "./lib/gameCopy";
+import { ReversiBoard } from "./components/ReversiBoard";
+import { TicTacToeBoard } from "./components/TicTacToeBoard";
+import { gameCatalog, gameName } from "./games/registry";
+import type { AiMetadata, AiStrategy, GameMode, GameState, GameType } from "./games/connect4/types";
+import { modeLabel, moveLabel, playerName } from "./lib/gameCopy";
 
 type SpectatorSpeed = "slow" | "normal" | "fast";
 
@@ -32,9 +34,13 @@ const speedDelay: Record<SpectatorSpeed, number> = {
   fast: 180,
 };
 
-function loadStats(): MatchStats {
+function statsKey(gameType: GameType): string {
+  return `boardarena:${gameType}-stats`;
+}
+
+function loadStats(gameType: GameType): MatchStats {
   try {
-    const value = window.localStorage.getItem("boardarena:connect4-stats");
+    const value = window.localStorage.getItem(statsKey(gameType));
     return value ? { ...defaultStats, ...JSON.parse(value) } : defaultStats;
   } catch {
     return defaultStats;
@@ -43,7 +49,7 @@ function loadStats(): MatchStats {
 
 function describeResult(game: GameState): string {
   if (game.winner === 0) return `${modeLabel(game.mode)}: draw in ${game.history.length} turns`;
-  return `${modeLabel(game.mode)}: ${game.winner === 1 ? "Red" : "Yellow"} won in ${game.history.length} turns`;
+  return `${modeLabel(game.mode)}: ${playerName(game.game_type, game.winner === 1 ? 1 : 2)} won in ${game.history.length} turns`;
 }
 
 function applyFinishedGame(stats: MatchStats, game: GameState): MatchStats {
@@ -71,6 +77,7 @@ function applyFinishedGame(stats: MatchStats, game: GameState): MatchStats {
 }
 
 export function App() {
+  const [activeGame, setActiveGame] = useState<GameType>("connect4");
   const [mode, setMode] = useState<GameMode>("pvai");
   const [difficulty, setDifficulty] = useState<AiStrategy>("medium");
   const [game, setGame] = useState<GameState | null>(null);
@@ -78,22 +85,27 @@ export function App() {
   const [aiMetadata, setAiMetadata] = useState<AiMetadata | null>(null);
   const [spectatorPaused, setSpectatorPaused] = useState(false);
   const [spectatorSpeed, setSpectatorSpeed] = useState<SpectatorSpeed>("normal");
-  const [stats, setStats] = useState<MatchStats>(() => loadStats());
+  const [stats, setStats] = useState<MatchStats>(() => loadStats("connect4"));
   const [recordedGameIds, setRecordedGameIds] = useState<Set<string>>(() => new Set());
   const [error, setError] = useState("");
   const [isBusy, setIsBusy] = useState(false);
 
   const turnSummary = useMemo(() => {
     if (!game) return "Set a mode and start a new game.";
-    if (game.winner !== null) return winnerText(game.winner);
-    return `${game.current_player === 1 ? "Red" : "Yellow"} to move`;
+    if (game.winner === 0) return "Draw";
+    if (game.winner === 1 || game.winner === 2) {
+      const score = game.score ? ` ${game.score[String(game.winner)]}-${game.score[String(game.winner === 1 ? 2 : 1)]}` : "";
+      return `${playerName(game.game_type, game.winner)} wins${score}`;
+    }
+    if (game.pass_turn?.passed) return game.pass_turn.message ?? `${playerName(game.game_type, game.current_player)} to move`;
+    return `${playerName(game.game_type, game.current_player)} to move`;
   }, [game]);
 
   const startGame = useCallback(async () => {
     setIsBusy(true);
     setError("");
     try {
-      const nextGame = await createGame(mode, difficulty);
+      const nextGame = await createGame(activeGame, mode, difficulty);
       setGame(nextGame);
       setAiMetadata(null);
       setSpectatorPaused(false);
@@ -103,7 +115,7 @@ export function App() {
     } finally {
       setIsBusy(false);
     }
-  }, [difficulty, mode]);
+  }, [activeGame, difficulty, mode]);
 
   const runAiTurn = useCallback(async () => {
     if (!game || game.status === "finished") return;
@@ -139,9 +151,31 @@ export function App() {
     [game],
   );
 
+  const playCell = useCallback(
+    async (row: number, column: number) => {
+      if (!game || game.status === "finished" || game.player_types[String(game.current_player)] !== "human") return;
+      setIsBusy(true);
+      setError("");
+      try {
+        const response = await makeHumanCellMove(game.game_id, row, column);
+        setGame(response.state);
+        setAiMetadata(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "That move did not work.");
+      } finally {
+        setIsBusy(false);
+      }
+    },
+    [game],
+  );
+
   useEffect(() => {
     void startGame();
   }, [startGame]);
+
+  useEffect(() => {
+    setStats(loadStats(activeGame));
+  }, [activeGame]);
 
   useEffect(() => {
     if (!game || isBusy || game.status === "finished") return;
@@ -157,7 +191,7 @@ export function App() {
     setRecordedGameIds((current) => new Set(current).add(game.game_id));
     setStats((current) => {
       const next = applyFinishedGame(current, game);
-      window.localStorage.setItem("boardarena:connect4-stats", JSON.stringify(next));
+      window.localStorage.setItem(statsKey(game.game_type), JSON.stringify(next));
       return next;
     });
   }, [game, recordedGameIds]);
@@ -165,6 +199,7 @@ export function App() {
   return (
     <main className="app-shell">
       <GameSidebar
+        activeGame={activeGame}
         aiMessage={aiMessage}
         aiMetadata={aiMetadata}
         difficulty={difficulty}
@@ -189,15 +224,23 @@ export function App() {
             <h2>{turnSummary}</h2>
           </div>
           <div className="score-strip">
-            <span className="red-dot" />
-            <strong>Red</strong>
-            <span className="yellow-dot" />
-            <strong>Yellow</strong>
+            <span className={`player-dot ${activeGame === "connect4" ? "red-dot" : activeGame === "reversi" ? "black-dot" : "x-dot"}`} />
+            <strong>{playerName(activeGame, 1)}</strong>
+            {game?.score ? <em>{game.score["1"]}</em> : null}
+            <span className={`player-dot ${activeGame === "connect4" ? "yellow-dot" : activeGame === "reversi" ? "white-dot" : "o-dot"}`} />
+            <strong>{playerName(activeGame, 2)}</strong>
+            {game?.score ? <em>{game.score["2"]}</em> : null}
           </div>
         </div>
 
         {error ? <div className="error-banner">{error}</div> : null}
-        <ConnectFourBoard game={game} isBusy={isBusy} onColumnSelect={playColumn} />
+        {activeGame === "connect4" ? (
+          <ConnectFourBoard game={game} isBusy={isBusy} onColumnSelect={playColumn} />
+        ) : activeGame === "reversi" ? (
+          <ReversiBoard game={game} isBusy={isBusy} onCellSelect={playCell} />
+        ) : (
+          <TicTacToeBoard game={game} isBusy={isBusy} onCellSelect={playCell} />
+        )}
 
         <section className="details-grid" aria-label="Match details">
           <article className="history-panel">
@@ -210,8 +253,8 @@ export function App() {
                 {game.history.map((move) => (
                   <li key={move.turn}>
                     <span>#{move.turn}</span>
-                    <strong>{move.player === 1 ? "Red" : "Yellow"}</strong>
-                    <em>Column {move.column + 1}</em>
+                    <strong>{playerName(game.game_type, move.player)}</strong>
+                    <em>{moveLabel(game.game_type, move.row, move.column)}</em>
                   </li>
                 ))}
               </ol>
@@ -223,14 +266,23 @@ export function App() {
           <article className="catalog-panel">
             <div className="panel-heading">
               <p className="eyebrow">Arena catalog</p>
-              <h2>Featured games</h2>
+              <h2>Choose a table</h2>
             </div>
             <div className="catalog-row">
               {gameCatalog.map((item) => (
-                <article className="game-card" key={item.id}>
+                <article className={`game-card ${item.id === activeGame ? "selected" : ""}`} key={item.id}>
                   <span>{item.status}</span>
                   <h3>{item.name}</h3>
                   <p>{item.summary}</p>
+                  {item.playable ? (
+                    <button className="catalog-button" disabled={item.id === activeGame} onClick={() => setActiveGame(item.id as GameType)} type="button">
+                      {item.id === activeGame ? "Selected" : `Play ${gameName(item.id as GameType)}`}
+                    </button>
+                  ) : (
+                    <button className="catalog-button" disabled type="button">
+                      Coming soon
+                    </button>
+                  )}
                 </article>
               ))}
             </div>

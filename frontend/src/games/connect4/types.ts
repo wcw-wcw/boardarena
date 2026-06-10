@@ -1,8 +1,10 @@
 export type GameMode = "pvp" | "pvai" | "aivai";
+export type GameType = "connect4" | "tictactoe" | "reversi";
 export type AiStrategy = "easy" | "medium" | "hard";
 export type PlayerType = "human" | "ai";
 
 export interface NewGameRequest {
+  game_type: GameType;
   mode: GameMode;
   starting_player: 1 | 2;
   ai_strategy_p1: AiStrategy;
@@ -28,10 +30,14 @@ export interface AiMetadata {
   legal_moves_considered?: number[] | null;
   strategy?: AiStrategy | null;
   chosen_column?: number | null;
+  chosen_row?: number | null;
+  flipped_cell_count?: number | null;
+  positional_factors?: Record<string, unknown> | null;
 }
 
 export interface GameState {
   game_id: string;
+  game_type: GameType;
   mode: GameMode;
   player_types: Record<string, PlayerType>;
   ai_strategies: Record<string, AiStrategy | null>;
@@ -42,6 +48,13 @@ export interface GameState {
   legal_moves: number[];
   last_move: HistoryItem | null;
   winning_cells: BoardCell[];
+  flipped_cells: BoardCell[];
+  score?: Record<string, number> | null;
+  pass_turn?: {
+    passed: boolean;
+    player: 1 | 2 | null;
+    message: string | null;
+  } | null;
   status: "in_progress" | "finished";
 }
 
@@ -52,6 +65,9 @@ export interface MoveResponse {
     column: number;
     player: 1 | 2;
     winner: 0 | 1 | 2 | null;
+    flipped_cells?: BoardCell[];
+    score?: Record<string, number>;
+    pass_turn?: GameState["pass_turn"];
   };
   state: GameState;
   explanation: string | null;

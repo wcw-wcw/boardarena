@@ -1,5 +1,6 @@
-import { difficultyLabel, modeLabel } from "../lib/gameCopy";
-import type { AiMetadata, AiStrategy, GameMode, GameState } from "../games/connect4/types";
+import { difficultyLabel, legalMoveLabel, modeLabel, playerName } from "../lib/gameCopy";
+import { gameName } from "../games/registry";
+import type { AiMetadata, AiStrategy, GameMode, GameState, GameType } from "../games/connect4/types";
 
 type SpectatorSpeed = "slow" | "normal" | "fast";
 
@@ -13,6 +14,7 @@ interface MatchStats {
 }
 
 interface GameSidebarProps {
+  activeGame: GameType;
   mode: GameMode;
   difficulty: AiStrategy;
   game: GameState | null;
@@ -35,6 +37,7 @@ const difficulties: AiStrategy[] = ["easy", "medium", "hard"];
 const speeds: SpectatorSpeed[] = ["slow", "normal", "fast"];
 
 export function GameSidebar({
+  activeGame,
   mode,
   difficulty,
   game,
@@ -54,13 +57,19 @@ export function GameSidebar({
   const currentPlayerType = game?.player_types[String(game.current_player)];
   const aiCanMove = game?.status === "in_progress" && currentPlayerType === "ai";
   const showSpectatorControls = mode === "aivai";
+  const chosenMove =
+    aiMetadata?.chosen_row !== null && aiMetadata?.chosen_row !== undefined && aiMetadata?.chosen_column !== null && aiMetadata?.chosen_column !== undefined
+      ? `${aiMetadata.chosen_row + 1}-${aiMetadata.chosen_column + 1}`
+      : aiMetadata?.chosen_column !== null && aiMetadata?.chosen_column !== undefined
+        ? String(aiMetadata.chosen_column + 1)
+        : "-";
 
   return (
     <aside className="sidebar">
       <div className="brand-row">
         <div>
           <p className="eyebrow">BoardArena</p>
-          <h1>Connect 4 Arena</h1>
+          <h1>{gameName(activeGame)} Arena</h1>
           <p className="brand-subtitle">A local-first board game lab for human and AI matchups.</p>
         </div>
         <span className="status-pill">{game?.status === "finished" ? "Finished" : "Live"}</span>
@@ -132,8 +141,8 @@ export function GameSidebar({
         <p>{aiMessage || "Start a game and the AI will explain its moves here."}</p>
         <dl className="metadata-grid">
           <div>
-            <dt>Chosen column</dt>
-            <dd>{aiMetadata?.chosen_column !== null && aiMetadata?.chosen_column !== undefined ? aiMetadata.chosen_column + 1 : "-"}</dd>
+            <dt>Chosen move</dt>
+            <dd>{chosenMove}</dd>
           </div>
           <div>
             <dt>Strategy</dt>
@@ -153,8 +162,14 @@ export function GameSidebar({
           </div>
           <div>
             <dt>Legal moves</dt>
-            <dd>{aiMetadata?.legal_moves_considered?.map((move) => move + 1).join(", ") ?? "-"}</dd>
+            <dd>{aiMetadata?.legal_moves_considered?.map((move) => legalMoveLabel(activeGame, move)).join(", ") ?? "-"}</dd>
           </div>
+          {activeGame === "reversi" ? (
+            <div>
+              <dt>Flipped</dt>
+              <dd>{aiMetadata?.flipped_cell_count ?? "-"}</dd>
+            </div>
+          ) : null}
         </dl>
       </section>
 
@@ -166,9 +181,9 @@ export function GameSidebar({
         <div className="stats-grid">
           <span>Total</span>
           <strong>{stats.totalGames}</strong>
-          <span>Red wins</span>
+          <span>{playerName(activeGame, 1)} wins</span>
           <strong>{stats.playerWins["1"]}</strong>
-          <span>Yellow wins</span>
+          <span>{playerName(activeGame, 2)} wins</span>
           <strong>{stats.playerWins["2"]}</strong>
           <span>Draws</span>
           <strong>{stats.draws}</strong>

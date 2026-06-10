@@ -260,6 +260,16 @@ button:not(:disabled):hover {
   background: #ffffff;
 }
 
+.score-strip em {
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: #eef3f8;
+  color: #121a2b;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.player-dot,
 .red-dot,
 .yellow-dot {
   width: 16px;
@@ -273,6 +283,16 @@ button:not(:disabled):hover {
 
 .yellow-dot {
   background: #ffd24f;
+}
+
+.black-dot {
+  border: 1px solid #121a2b;
+  background: #121a2b;
+}
+
+.white-dot {
+  border: 1px solid #9fb0c3;
+  background: #ffffff;
 }
 
 .error-banner {
@@ -437,6 +457,11 @@ button:not(:disabled):hover {
   padding: 16px;
 }
 
+.game-card.selected {
+  border-color: #35d0ba;
+  box-shadow: 0 0 0 3px rgba(53, 208, 186, 0.16);
+}
+
 .game-card span {
   color: #0f766e;
   font-size: 0.78rem;
@@ -448,6 +473,186 @@ button:not(:disabled):hover {
   margin-bottom: 0;
   color: #627185;
   line-height: 1.5;
+}
+
+.catalog-button {
+  width: 100%;
+  min-height: 38px;
+  margin-top: 14px;
+  border-radius: 8px;
+  background: #121a2b;
+  color: #f7fbff;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.catalog-button:disabled {
+  background: #d9e1ea;
+  color: #627185;
+}
+
+.ttt-wrap {
+  width: min(100%, 620px);
+  margin: 0 auto;
+}
+
+.ttt-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  aspect-ratio: 1;
+  border: 1px solid #d9e1ea;
+  border-radius: 8px;
+  padding: 14px;
+  background: #ffffff;
+  box-shadow: 0 22px 50px rgba(18, 26, 43, 0.18);
+}
+
+.ttt-cell {
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  border: 2px solid #d9e1ea;
+  border-radius: 8px;
+  background: #f3f7fb;
+  color: #121a2b;
+  cursor: pointer;
+}
+
+.ttt-cell:not(:disabled):hover,
+.ttt-cell:not(:disabled):focus-visible {
+  border-color: #35d0ba;
+  box-shadow: 0 10px 22px rgba(53, 208, 186, 0.2);
+}
+
+.mark {
+  font-size: clamp(3rem, 14vw, 6.5rem);
+  font-weight: 900;
+  line-height: 1;
+}
+
+.ttt-cell .player-1 {
+  color: #2458a8;
+  background: transparent;
+}
+
+.ttt-cell .player-2 {
+  color: #e64f45;
+  background: transparent;
+}
+
+.ttt-cell.last-move {
+  outline: 4px solid #35d0ba;
+  outline-offset: 2px;
+}
+
+.ttt-cell.winning-cell {
+  animation: winnerPulse 900ms ease-in-out infinite alternate;
+  border-color: #ffd24f;
+  background: #fff8d8;
+}
+
+.reversi-wrap {
+  width: min(100%, 720px);
+  margin: 0 auto;
+}
+
+.reversi-grid {
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  gap: 5px;
+  aspect-ratio: 1;
+  border: 1px solid #0d4b3d;
+  border-radius: 8px;
+  padding: 12px;
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    #13725c;
+  background-size: 12.5% 12.5%;
+  box-shadow: 0 22px 50px rgba(18, 26, 43, 0.22);
+}
+
+.reversi-cell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-width: 0;
+  border: 1px solid rgba(13, 75, 61, 0.75);
+  border-radius: 6px;
+  background: rgba(19, 114, 92, 0.86);
+  cursor: pointer;
+}
+
+.reversi-cell:not(:disabled):hover,
+.reversi-cell:not(:disabled):focus-visible {
+  box-shadow: inset 0 0 0 3px #35d0ba;
+}
+
+.reversi-disc {
+  display: block;
+  width: 78%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  box-shadow:
+    inset 0 8px 13px rgba(255, 255, 255, 0.18),
+    0 8px 12px rgba(18, 26, 43, 0.28);
+}
+
+.reversi-disc.player-1 {
+  background: #101725;
+}
+
+.reversi-disc.player-2 {
+  border: 1px solid #d9e1ea;
+  background: #f7fbff;
+}
+
+.legal-marker {
+  width: 24%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: rgba(255, 210, 79, 0.72);
+  box-shadow: 0 0 0 5px rgba(255, 210, 79, 0.16);
+  opacity: 0;
+}
+
+.reversi-cell.legal-cell .legal-marker {
+  opacity: 1;
+}
+
+.reversi-cell.last-move {
+  outline: 4px solid #35d0ba;
+  outline-offset: 2px;
+  z-index: 1;
+}
+
+.reversi-cell.flipped-cell .reversi-disc {
+  outline: 4px solid #ffd24f;
+  outline-offset: 2px;
+}
+
+.pass-message {
+  margin: 12px 0 0;
+  border: 1px solid #d9e1ea;
+  border-radius: 8px;
+  padding: 10px 12px;
+  background: #ffffff;
+  color: #32546f;
+  font-weight: 800;
+  text-align: center;
+}
+
+.x-dot,
+.o-dot {
+  display: grid;
+  place-items: center;
+  background: #2458a8;
+  color: #ffffff;
+}
+
+.o-dot {
+  background: #e64f45;
 }
 
 @keyframes winnerPulse {
@@ -490,6 +695,11 @@ button:not(:disabled):hover {
   .board-grid {
     gap: 6px;
     padding: 9px;
+  }
+
+  .reversi-grid {
+    gap: 3px;
+    padding: 8px;
   }
 
   .catalog-row {

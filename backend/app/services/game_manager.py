@@ -4,15 +4,33 @@ from dataclasses import dataclass
 from threading import Lock
 from uuid import uuid4
 
-from backend.game.connect4 import ConnectFour
+from typing import Protocol
 
-from backend.app.schemas.game import AIStrategy, GameMode, GameStateResponse, PlayerType
+from backend.game.connect4 import ConnectFour
+from backend.game.reversi import Reversi
+from backend.game.tictactoe import TicTacToe
+
+from backend.app.schemas.game import AIStrategy, GameMode, GameStateResponse, GameType, PlayerType
+
+
+class GameEngine(Protocol):
+    current_player: int
+    winner: int | None
+
+    def get_state(self) -> dict: ...
+
+    def get_legal_moves(self) -> list[int]: ...
+
+    def is_valid_move(self, move: int) -> bool: ...
+
+    def make_move(self, move: int) -> dict: ...
 
 
 @dataclass
 class GameSession:
     game_id: str
-    game: ConnectFour
+    game_type: GameType
+    game: GameEngine
     mode: GameMode
     player_types: dict[int, PlayerType]
     ai_strategies: dict[int, AIStrategy | None]
@@ -26,6 +44,7 @@ class InMemoryGameStore:
 
     def create_game(
         self,
+        game_type: GameType,
         mode: GameMode,
         starting_player: int,
         ai_strategy_p1: AIStrategy,
@@ -34,7 +53,8 @@ class InMemoryGameStore:
         player_types = self._resolve_player_types(mode)
         session = GameSession(
             game_id=str(uuid4()),
-            game=ConnectFour(starting_player=starting_player),
+            game_type=game_type,
+            game=self._create_engine(game_type, starting_player),
             mode=mode,
             player_types=player_types,
             ai_strategies={
@@ -56,6 +76,7 @@ class InMemoryGameStore:
         state = session.game.get_state()
         return GameStateResponse(
             game_id=session.game_id,
+            game_type=session.game_type,
             mode=session.mode,
             player_types=session.player_types,
             ai_strategies=session.ai_strategies,
@@ -66,6 +87,9 @@ class InMemoryGameStore:
             legal_moves=state["legal_moves"],
             last_move=state["last_move"],
             winning_cells=state["winning_cells"],
+            flipped_cells=state.get("flipped_cells", []),
+            score=state.get("score"),
+            pass_turn=state.get("pass_turn"),
             status="finished" if state["winner"] is not None else "in_progress",
         )
 
@@ -78,6 +102,16 @@ class InMemoryGameStore:
         if mode == "aivai":
             return {1: "ai", 2: "ai"}
         raise ValueError(f"Unsupported mode: {mode}")
+
+    @staticmethod
+    def _create_engine(game_type: GameType, starting_player: int) -> GameEngine:
+        if game_type == "connect4":
+            return ConnectFour(starting_player=starting_player)
+        if game_type == "tictactoe":
+            return TicTacToe(starting_player=starting_player)
+        if game_type == "reversi":
+            return Reversi(starting_player=starting_player)
+        raise ValueError(f"Unsupported game type: {game_type}")
 
 
 game_store = InMemoryGameStore()

@@ -10,6 +10,7 @@ router = APIRouter(prefix="/games", tags=["games"])
 @router.post("", response_model=GameStateResponse, status_code=status.HTTP_201_CREATED)
 def create_game(payload: NewGameRequest) -> GameStateResponse:
     session = game_store.create_game(
+        game_type=payload.game_type,
         mode=payload.mode,
         starting_player=payload.starting_player,
         ai_strategy_p1=payload.ai_strategy_p1,
@@ -41,11 +42,13 @@ def make_human_move(game_id: str, payload: MoveRequest) -> MoveResponse:
     if session.player_types[current_player] != "human":
         raise HTTPException(status_code=409, detail=f"Player {current_player} is not controlled by a human.")
 
-    if not session.game.is_valid_move(payload.column):
-        raise HTTPException(status_code=400, detail=f"Column {payload.column} is not a legal move.")
+    move = _request_to_move(session.game_type, payload)
+    if not session.game.is_valid_move(move):
+        detail = f"Column {payload.column} is not a legal move." if session.game_type == "connect4" else "That square is not a legal move."
+        raise HTTPException(status_code=400, detail=detail)
 
     try:
-        move_result = session.game.make_move(payload.column)
+        move_result = session.game.make_move(move)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
 
@@ -84,3 +87,19 @@ def make_ai_move(game_id: str) -> MoveResponse:
         explanation=result["explanation"],
         ai_metadata=result["metadata"],
     )
+
+
+def _request_to_move(game_type: str, payload: MoveRequest) -> int:
+    if game_type == "tictactoe":
+        if payload.row is None:
+            raise HTTPException(status_code=400, detail="Tic-Tac-Toe moves require both row and column.")
+        if payload.row > 2 or payload.column > 2:
+            raise HTTPException(status_code=400, detail="Tic-Tac-Toe row and column must be between 0 and 2.")
+        return payload.row * 3 + payload.column
+    if game_type == "reversi":
+        if payload.row is None:
+            raise HTTPException(status_code=400, detail="Reversi moves require both row and column.")
+        return payload.row * 8 + payload.column
+    if payload.column > 6:
+        raise HTTPException(status_code=400, detail="Connect 4 columns must be between 0 and 6.")
+    return payload.column
