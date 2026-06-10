@@ -88,6 +88,7 @@ export function App() {
   const [stats, setStats] = useState<MatchStats>(() => loadStats("connect4"));
   const [recordedGameIds, setRecordedGameIds] = useState<Set<string>>(() => new Set());
   const [error, setError] = useState("");
+  const [hasStartedOnce, setHasStartedOnce] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
 
   const turnSummary = useMemo(() => {
@@ -109,9 +110,11 @@ export function App() {
       setGame(nextGame);
       setAiMetadata(null);
       setSpectatorPaused(false);
+      setHasStartedOnce(true);
       setAiMessage(mode === "pvp" ? "Local two-player game ready." : `${modeLabel(mode)} ready on ${difficulty} difficulty.`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to create a game.");
+      setGame(null);
+      setError(err instanceof Error ? err.message : "Unable to create a game. Check that the backend is running.");
     } finally {
       setIsBusy(false);
     }
@@ -233,8 +236,28 @@ export function App() {
           </div>
         </div>
 
-        {error ? <div className="error-banner">{error}</div> : null}
-        {activeGame === "connect4" ? (
+        {error ? (
+          <div className="error-banner" role="alert">
+            <strong>Action needed</strong>
+            <span>{error}</span>
+          </div>
+        ) : null}
+        {!game && (isBusy || !hasStartedOnce || error) ? (
+          <section className={`empty-state ${error ? "offline-state" : ""}`} aria-live="polite">
+            <p className="eyebrow">{error ? "Backend connection" : "Preparing match"}</p>
+            <h2>{error ? "The arena is waiting for the API." : "Setting up the board..."}</h2>
+            <p>
+              {error
+                ? "Run the FastAPI backend on 127.0.0.1:8000 or set VITE_API_BASE_URL to your deployed API, then start a new match."
+                : "BoardArena is creating a local session with backend-owned rule validation."}
+            </p>
+            {error ? (
+              <button className="primary-button inline-action" disabled={isBusy} onClick={startGame} type="button">
+                Retry connection
+              </button>
+            ) : null}
+          </section>
+        ) : activeGame === "connect4" ? (
           <ConnectFourBoard game={game} isBusy={isBusy} onColumnSelect={playColumn} />
         ) : activeGame === "reversi" ? (
           <ReversiBoard game={game} isBusy={isBusy} onCellSelect={playCell} />

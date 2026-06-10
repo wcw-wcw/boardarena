@@ -4,10 +4,15 @@ import type { AiStrategy, GameMode, GameState, GameType, MoveResponse, NewGameRe
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: { "Content-Type": "application/json", ...init?.headers },
-    ...init,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      headers: { "Content-Type": "application/json", ...init?.headers },
+      ...init,
+    });
+  } catch {
+    throw new Error(`Cannot reach the BoardArena API at ${API_BASE_URL}. Start the FastAPI backend, then try again.`);
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: response.statusText }));
