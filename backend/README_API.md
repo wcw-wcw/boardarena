@@ -1,4 +1,4 @@
-# LLM Game Arena - FastAPI milestone
+# BoardArena - FastAPI milestone
 
 ## Run locally
 

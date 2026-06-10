@@ -59,7 +59,7 @@ export function GameSidebar({
     <aside className="sidebar">
       <div className="brand-row">
         <div>
-          <p className="eyebrow">LLM Game Arena</p>
+          <p className="eyebrow">BoardArena</p>
           <h1>Connect 4 Arena</h1>
           <p className="brand-subtitle">A local-first board game lab for human and AI matchups.</p>
         </div>

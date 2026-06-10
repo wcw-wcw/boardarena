@@ -1,6 +1,6 @@
-# LLM Game Arena
+# BoardArena
 
-LLM Game Arena is a small full-stack game playground. The current playable game is Connect 4, with a React/Vite frontend and a FastAPI backend that owns game sessions, rule validation, and AI moves. The project is structured so more games can be added later without making Connect 4-specific code leak through the whole app.
+BoardArena is a small full-stack board game playground. The current playable game is Connect 4, with a React/Vite frontend and a FastAPI backend that owns game sessions, rule validation, and AI moves. The project is structured so more games can be added later without making Connect 4-specific code leak through the whole app.
 
 ## Current Features
 
@@ -162,7 +162,7 @@ There is no active database integration yet.
 - Restarting the API clears all games.
 - Multiple API worker processes would not share game state.
 
-When persistence is added, start with tables for users, games, moves, AI settings, and optional LLM conversation turns. Add migrations under `database/migrations/` and document the migration command here.
+When persistence is added, start with tables for users, games, moves, AI settings, and optional coach/commentary turns. Add migrations under `database/migrations/` and document the migration command here.
 
 ## Deployment Notes
 
@@ -173,16 +173,16 @@ When persistence is added, start with tables for users, games, moves, AI setting
 - Restrict CORS before public deployment. The current backend allows all origins for local development.
 - Add persistent storage before running more than one backend worker or deploying to an environment where process restarts are expected.
 
-## LLM Integration Direction
+## Coach Integration Direction
 
-No LLM is currently wired into the runtime. The safest path is to keep game rules and legal move validation deterministic in the backend, then add an LLM as a conversational coach/commentator.
+No external model is currently wired into the runtime. The safest path is to keep game rules and legal move validation deterministic in the backend, then add an optional conversational coach/commentator.
 
 Recommended shape:
 
 - Add a backend chat endpoint such as `POST /games/{game_id}/chat`.
-- Send compact game state, legal moves, move history, current player, and recent AI explanation to the LLM.
+- Send compact game state, legal moves, move history, current player, and recent AI explanation to the coach service.
 - Require structured output for optional hints or tone changes.
-- Never let the LLM directly mutate the board.
+- Never let a coach service directly mutate the board.
 - Validate all suggested moves against `legal_moves`.
 - Store any player-adaptation profile separately from the move engine.
 
@@ -197,6 +197,6 @@ Local/free options such as Ollama can be integrated behind a service object with
 - No formal frontend test suite.
 - Backend tests are pytest-style but pytest is not installed by default.
 - CORS is permissive and intended only for development.
-- AI is heuristic/minimax-based, not LLM-based.
+- AI is heuristic/minimax-based, not model-driven.
 - `backend/client.py` and `backend/con4old.py` are legacy terminal/prototype files.
 - `frontend/dist` may exist locally after a build and should be treated as generated output.

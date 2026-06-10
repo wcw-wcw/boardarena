@@ -34,7 +34,7 @@ const speedDelay: Record<SpectatorSpeed, number> = {
 
 function loadStats(): MatchStats {
   try {
-    const value = window.localStorage.getItem("llm-game-arena:connect4-stats");
+    const value = window.localStorage.getItem("boardarena:connect4-stats");
     return value ? { ...defaultStats, ...JSON.parse(value) } : defaultStats;
   } catch {
     return defaultStats;
@@ -157,7 +157,7 @@ export function App() {
     setRecordedGameIds((current) => new Set(current).add(game.game_id));
     setStats((current) => {
       const next = applyFinishedGame(current, game);
-      window.localStorage.setItem("llm-game-arena:connect4-stats", JSON.stringify(next));
+      window.localStorage.setItem("boardarena:connect4-stats", JSON.stringify(next));
       return next;
     });
   }, [game, recordedGameIds]);
