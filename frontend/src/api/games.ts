@@ -1,7 +1,18 @@
 import type { AiStrategy, GameMode, GameState, GameType, MoveResponse, NewGameRequest } from "../games/connect4/types";
 
 // Vite inlines this at build time; set it when the API is not running on the local default.
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
+const DEFAULT_API_BASE_URL = "http://127.0.0.1:8000";
+
+function getApiBaseUrl(): string {
+  const configuredUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+  return (configuredUrl || DEFAULT_API_BASE_URL).replace(/\/+$/, "");
+}
+
+const API_BASE_URL = getApiBaseUrl();
+
+function requestErrorMessage(): string {
+  return `Cannot reach the BoardArena API at ${API_BASE_URL}. Check VITE_API_BASE_URL and make sure the FastAPI backend is running.`;
+}
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
@@ -11,12 +22,12 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
       ...init,
     });
   } catch {
-    throw new Error(`Cannot reach the BoardArena API at ${API_BASE_URL}. Start the FastAPI backend, then try again.`);
+    throw new Error(requestErrorMessage());
   }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ detail: response.statusText }));
-    throw new Error(error.detail ?? "The game server returned an error.");
+    throw new Error(error.detail || `The BoardArena API returned ${response.status}. Please try again.`);
   }
 
   return response.json() as Promise<T>;

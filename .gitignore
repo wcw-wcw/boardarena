@@ -1,6 +1,17 @@
 # Local/private docs
 docs/**/*.md
 
+# Local environment files
+.env
+.env.*
+!.env.example
+backend/.env
+backend/.env.*
+!backend/.env.example
+frontend/.env
+frontend/.env.*
+!frontend/.env.example
+
 # Generated local artifacts
 frontend/node_modules/
 frontend/dist/

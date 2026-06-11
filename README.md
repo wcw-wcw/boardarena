@@ -57,6 +57,13 @@ Reversi local match with legal move indicators, score, and flipped-disc highligh
 
 ## Local Setup
 
+Optional local environment examples are provided for both app pieces:
+
+```bash
+cp backend/.env.example backend/.env
+cp frontend/.env.example frontend/.env
+```
+
 Install backend dependencies from the repository root:
 
 ```bash
@@ -82,6 +89,7 @@ Health check:
 
 ```bash
 curl -sS http://127.0.0.1:8000/health
+curl -sS http://127.0.0.1:8000/api/health
 ```
 
 ## Run The Frontend
@@ -115,7 +123,7 @@ python3 -m compileall backend
 Backend smoke tests:
 
 ```bash
-python3 -c "from backend.tests import test_medium_ai_takes_winning_move, test_medium_ai_blocks_immediate_threat, test_hard_ai_prefers_center_opening, test_connect_four_returns_winning_cells, test_tictactoe_returns_winning_cells, test_tictactoe_draw_detection, test_tictactoe_medium_ai_takes_winning_move, test_tictactoe_medium_ai_blocks_immediate_threat, test_tictactoe_hard_ai_prefers_center_opening, test_reversi_initial_board_state, test_reversi_starting_legal_moves, test_reversi_move_application_flips_discs, test_reversi_invalid_move_rejection, test_reversi_pass_turn_behavior, test_reversi_game_over_scoring_draw, test_reversi_ai_move_generation; test_medium_ai_takes_winning_move(); test_medium_ai_blocks_immediate_threat(); test_hard_ai_prefers_center_opening(); test_connect_four_returns_winning_cells(); test_tictactoe_returns_winning_cells(); test_tictactoe_draw_detection(); test_tictactoe_medium_ai_takes_winning_move(); test_tictactoe_medium_ai_blocks_immediate_threat(); test_tictactoe_hard_ai_prefers_center_opening(); test_reversi_initial_board_state(); test_reversi_starting_legal_moves(); test_reversi_move_application_flips_discs(); test_reversi_invalid_move_rejection(); test_reversi_pass_turn_behavior(); test_reversi_game_over_scoring_draw(); test_reversi_ai_move_generation(); print('backend smoke tests passed')"
+python3 -m backend.tests
 ```
 
 Frontend checks:
@@ -138,7 +146,7 @@ Full local validation order:
 
 ```bash
 python3 -m compileall backend
-python3 -c "from backend.tests import test_medium_ai_takes_winning_move, test_medium_ai_blocks_immediate_threat, test_hard_ai_prefers_center_opening, test_connect_four_returns_winning_cells, test_tictactoe_returns_winning_cells, test_tictactoe_draw_detection, test_tictactoe_medium_ai_takes_winning_move, test_tictactoe_medium_ai_blocks_immediate_threat, test_tictactoe_hard_ai_prefers_center_opening, test_reversi_initial_board_state, test_reversi_starting_legal_moves, test_reversi_move_application_flips_discs, test_reversi_invalid_move_rejection, test_reversi_pass_turn_behavior, test_reversi_game_over_scoring_draw, test_reversi_ai_move_generation; test_medium_ai_takes_winning_move(); test_medium_ai_blocks_immediate_threat(); test_hard_ai_prefers_center_opening(); test_connect_four_returns_winning_cells(); test_tictactoe_returns_winning_cells(); test_tictactoe_draw_detection(); test_tictactoe_medium_ai_takes_winning_move(); test_tictactoe_medium_ai_blocks_immediate_threat(); test_tictactoe_hard_ai_prefers_center_opening(); test_reversi_initial_board_state(); test_reversi_starting_legal_moves(); test_reversi_move_application_flips_discs(); test_reversi_invalid_move_rejection(); test_reversi_pass_turn_behavior(); test_reversi_game_over_scoring_draw(); test_reversi_ai_move_generation(); print('backend smoke tests passed')"
+python3 -m backend.tests
 cd frontend
 npm install
 npm run typecheck
@@ -163,13 +171,34 @@ git diff --check
 
 ## Deployment Notes
 
-- The frontend can be hosted as a static Vite build.
-- The FastAPI backend should be hosted separately as an ASGI service.
-- Configure the frontend build with `VITE_API_BASE_URL` when the API is not available at `http://127.0.0.1:8000`.
-- Do not commit secrets or local environment files.
-- Generated artifacts such as `frontend/dist`, `frontend/node_modules`, Python bytecode, `.DS_Store`, and local env files should remain ignored.
-- Playwright reports, traces, videos, and test result folders should remain ignored unless a specific debugging artifact is intentionally shared outside the repo.
-- CORS is currently permissive for local development and should be tightened before a public deployment.
+BoardArena deploys as two pieces:
+
+- **Frontend**: a static Vite build from `frontend/`.
+- **Backend**: a FastAPI ASGI service from `backend.app.main:app`.
+
+You can host the pieces on any platform that supports static sites plus Python ASGI services. The frontend build must know the deployed API URL, and the backend must allow the deployed frontend origin with CORS.
+
+Required production configuration:
+
+| Location | Variable | Example | Notes |
+| --- | --- | --- | --- |
+| Frontend | `VITE_API_BASE_URL` | `https://api.example.com` | Used at Vite build time. Leave unset only when the browser should call the local default `http://127.0.0.1:8000`. |
+| Backend | `ALLOWED_ORIGINS` | `https://boardarena.example.com` | Comma-separated exact browser origins allowed by CORS. Local defaults are `http://127.0.0.1:5173,http://localhost:5173`. |
+| Backend | `APP_ENV` | `production` | Optional safe environment label returned by health endpoints. |
+
+Health endpoints are available at `/health` and `/api/health`. They return app status, app name, environment, and version without exposing sensitive environment variables.
+
+Production validation checklist:
+
+- Run `python3 -m compileall backend`.
+- Run the backend smoke tests from the Validation section.
+- Run `npm run typecheck` from `frontend/`.
+- Run `npm run build` from `frontend/` with the production `VITE_API_BASE_URL`.
+- Run `npm run test:smoke` from `frontend/` for local browser smoke coverage.
+- Open the deployed frontend in a browser and start a match against the deployed API.
+- Confirm the deployed API health endpoint returns `status: "ok"`.
+
+Do not commit secrets or local environment files. Generated artifacts such as `frontend/dist`, `frontend/node_modules`, Python bytecode, `.DS_Store`, and local env files should remain ignored. Playwright reports, traces, videos, and test result folders should remain ignored unless a specific debugging artifact is intentionally shared outside the repo.
 
 ## Current Limitations
 
@@ -188,5 +217,4 @@ git diff --check
 - Add Gomoku as the fourth playable game.
 - Add optional hosted-demo links.
 - Consider ESLint or a small unit-test layer once the public demo surface stabilizes.
-- Add stricter production CORS and deployment configuration.
 - Consider persistent match history after the local-first demo is stable.

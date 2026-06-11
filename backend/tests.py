@@ -4,8 +4,28 @@ from backend.game.reversi import Reversi
 from backend.game.reversi_ai import choose_reversi_ai_move
 from backend.game.tictactoe import TicTacToe
 from backend.game.tictactoe_ai import choose_tictactoe_ai_move
+from backend.app.main import api_healthcheck, healthcheck
 
 
+SMOKE_TESTS = []
+
+
+def smoke_test(test_func):
+    SMOKE_TESTS.append(test_func)
+    return test_func
+
+
+@smoke_test
+def test_health_response_safe():
+    for response in (healthcheck(), api_healthcheck()):
+        assert response["status"] == "ok"
+        assert response["app"] == "BoardArena API"
+        assert "environment" in response
+        assert "version" in response
+        assert "ALLOWED_ORIGINS" not in response
+
+
+@smoke_test
 def test_medium_ai_takes_winning_move():
     game = ConnectFour(starting_player=1)
     game.board[5][0] = 1
@@ -17,6 +37,7 @@ def test_medium_ai_takes_winning_move():
     assert decision["move"] == 3
 
 
+@smoke_test
 def test_medium_ai_blocks_immediate_threat():
     game = ConnectFour(starting_player=1)
     game.board[5][0] = 2
@@ -28,6 +49,7 @@ def test_medium_ai_blocks_immediate_threat():
     assert decision["move"] == 3
 
 
+@smoke_test
 def test_hard_ai_prefers_center_opening():
     game = ConnectFour(starting_player=1)
 
@@ -36,6 +58,7 @@ def test_hard_ai_prefers_center_opening():
     assert decision["move"] == 3
 
 
+@smoke_test
 def test_connect_four_returns_winning_cells():
     game = ConnectFour(starting_player=1)
     game.board[5][0] = 1
@@ -54,6 +77,7 @@ def test_connect_four_returns_winning_cells():
     assert game.get_state()["last_move"]["column"] == 3
 
 
+@smoke_test
 def test_tictactoe_returns_winning_cells():
     game = TicTacToe(starting_player=1)
     game.board[0][0] = 1
@@ -70,6 +94,7 @@ def test_tictactoe_returns_winning_cells():
     assert game.get_state()["last_move"]["column"] == 2
 
 
+@smoke_test
 def test_tictactoe_draw_detection():
     game = TicTacToe(starting_player=1)
     for move in [0, 1, 2, 4, 3, 5, 7, 6, 8]:
@@ -78,6 +103,7 @@ def test_tictactoe_draw_detection():
     assert game.winner == 0
 
 
+@smoke_test
 def test_tictactoe_medium_ai_takes_winning_move():
     game = TicTacToe(starting_player=1)
     game.board[0][0] = 1
@@ -88,6 +114,7 @@ def test_tictactoe_medium_ai_takes_winning_move():
     assert decision["move"] == 2
 
 
+@smoke_test
 def test_tictactoe_medium_ai_blocks_immediate_threat():
     game = TicTacToe(starting_player=1)
     game.board[0][0] = 2
@@ -98,6 +125,7 @@ def test_tictactoe_medium_ai_blocks_immediate_threat():
     assert decision["move"] == 2
 
 
+@smoke_test
 def test_tictactoe_hard_ai_prefers_center_opening():
     game = TicTacToe(starting_player=1)
 
@@ -106,6 +134,7 @@ def test_tictactoe_hard_ai_prefers_center_opening():
     assert decision["move"] == 4
 
 
+@smoke_test
 def test_reversi_initial_board_state():
     game = Reversi(starting_player=1)
 
@@ -116,12 +145,14 @@ def test_reversi_initial_board_state():
     assert game.score == {1: 2, 2: 2}
 
 
+@smoke_test
 def test_reversi_starting_legal_moves():
     game = Reversi(starting_player=1)
 
     assert set(game.get_legal_moves()) == {19, 26, 37, 44}
 
 
+@smoke_test
 def test_reversi_move_application_flips_discs():
     game = Reversi(starting_player=1)
 
@@ -134,6 +165,7 @@ def test_reversi_move_application_flips_discs():
     assert game.current_player == 2
 
 
+@smoke_test
 def test_reversi_invalid_move_rejection():
     game = Reversi(starting_player=1)
 
@@ -145,6 +177,7 @@ def test_reversi_invalid_move_rejection():
         raise AssertionError("Expected invalid Reversi move to be rejected.")
 
 
+@smoke_test
 def test_reversi_pass_turn_behavior():
     game = Reversi(starting_player=1)
     game.board = [[1 for _ in range(8)] for _ in range(8)]
@@ -161,6 +194,7 @@ def test_reversi_pass_turn_behavior():
     assert result["pass_turn"]["message"] == "Both players have no legal moves. Final score decides the game."
 
 
+@smoke_test
 def test_reversi_game_over_scoring_draw():
     game = Reversi(starting_player=1)
     game.board = [[1 if (row + col) % 2 == 0 else 2 for col in range(8)] for row in range(8)]
@@ -171,6 +205,7 @@ def test_reversi_game_over_scoring_draw():
     assert game.winner == 0
 
 
+@smoke_test
 def test_reversi_ai_move_generation():
     game = Reversi(starting_player=1)
 
@@ -178,3 +213,9 @@ def test_reversi_ai_move_generation():
 
     assert decision["move"] in game.get_legal_moves()
     assert decision["metadata"]["flipped_cell_count"] >= 1
+
+
+if __name__ == "__main__":
+    for test in SMOKE_TESTS:
+        test()
+    print("backend smoke tests passed")
