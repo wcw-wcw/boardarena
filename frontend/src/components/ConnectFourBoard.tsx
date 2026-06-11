@@ -16,11 +16,13 @@ export function ConnectFourBoard({ game, isBusy, onColumnSelect }: ConnectFourBo
   const winningCellKeys = new Set((game?.winning_cells ?? []).map((cell) => `${cell.row}-${cell.column}`));
 
   return (
-    <div className="board-wrap" aria-label="Connect 4 board">
+    <div className="board-wrap" aria-label="Connect 4 board" data-testid="board-connect4">
       <div className="column-actions">
         {Array.from({ length: 7 }, (_, column) => (
           <button
             className="drop-button"
+            aria-label={`Drop in column ${column + 1}`}
+            data-testid={`connect4-drop-${column}`}
             disabled={!canPlay || !legalMoves.has(column)}
             key={column}
             onClick={() => onColumnSelect(column)}
@@ -31,7 +33,7 @@ export function ConnectFourBoard({ game, isBusy, onColumnSelect }: ConnectFourBo
           </button>
         ))}
       </div>
-      <div className="board-grid">
+      <div className="board-grid" data-testid="connect4-grid">
         {board.flatMap((row, rowIndex) =>
           row.map((cell, columnIndex) => {
             const cellKey = `${rowIndex}-${columnIndex}`;

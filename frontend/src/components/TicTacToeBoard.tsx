@@ -16,8 +16,8 @@ export function TicTacToeBoard({ game, isBusy, onCellSelect }: TicTacToeBoardPro
   const winningCellKeys = new Set((game?.winning_cells ?? []).map((cell) => `${cell.row}-${cell.column}`));
 
   return (
-    <div className="ttt-wrap" aria-label="Tic-Tac-Toe board">
-      <div className="ttt-grid">
+    <div className="ttt-wrap" aria-label="Tic-Tac-Toe board" data-testid="board-tictactoe">
+      <div className="ttt-grid" data-testid="tictactoe-grid">
         {board.flatMap((row, rowIndex) =>
           row.map((cell, columnIndex) => {
             const cellKey = `${rowIndex}-${columnIndex}`;
@@ -30,6 +30,7 @@ export function TicTacToeBoard({ game, isBusy, onCellSelect }: TicTacToeBoardPro
               <button
                 aria-label={`Play row ${rowIndex + 1}, column ${columnIndex + 1}`}
                 className={classes.join(" ")}
+                data-testid={`tictactoe-cell-${rowIndex}-${columnIndex}`}
                 disabled={!canPlay || !legalMoves.has(moveIndex)}
                 key={cellKey}
                 onClick={() => onCellSelect(rowIndex, columnIndex)}

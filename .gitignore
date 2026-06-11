@@ -4,6 +4,8 @@ docs/**/*.md
 # Generated local artifacts
 frontend/node_modules/
 frontend/dist/
+frontend/playwright-report/
+frontend/test-results/
 __pycache__/
 *.pyc
 .DS_Store

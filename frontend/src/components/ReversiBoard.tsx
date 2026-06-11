@@ -16,8 +16,8 @@ export function ReversiBoard({ game, isBusy, onCellSelect }: ReversiBoardProps) 
   const flippedCellKeys = new Set((game?.flipped_cells ?? []).map((cell) => `${cell.row}-${cell.column}`));
 
   return (
-    <div className="reversi-wrap" aria-label="Reversi board">
-      <div className="reversi-grid">
+    <div className="reversi-wrap" aria-label="Reversi board" data-testid="board-reversi">
+      <div className="reversi-grid" data-testid="reversi-grid">
         {board.flatMap((row, rowIndex) =>
           row.map((cell, columnIndex) => {
             const cellKey = `${rowIndex}-${columnIndex}`;
@@ -32,6 +32,7 @@ export function ReversiBoard({ game, isBusy, onCellSelect }: ReversiBoardProps) 
               <button
                 aria-label={`Play row ${rowIndex + 1}, column ${columnIndex + 1}`}
                 className={classes.join(" ")}
+                data-testid={`reversi-cell-${rowIndex}-${columnIndex}`}
                 disabled={!canPlay || !isLegal}
                 key={cellKey}
                 onClick={() => onCellSelect(rowIndex, columnIndex)}

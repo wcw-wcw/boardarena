@@ -24,7 +24,17 @@ BoardArena is a local-first AI board-game arena built with React, Vite, TypeScri
 
 ## Screenshots
 
-Screenshots are not committed yet. Add real desktop and mobile screenshots after a hosted or locally captured demo is ready; avoid generated build artifacts or fake placeholder images.
+![BoardArena catalog showing the playable game cards](assets/screenshots/arena-catalog.png)
+
+BoardArena catalog with the shared match controls and game picker.
+
+![Connect 4 match with AI explanation metadata](assets/screenshots/connect4-ai-explanation.png)
+
+Connect 4 human-vs-AI match with the AI explanation panel visible.
+
+![Reversi match showing legal move indicators and flipped discs](assets/screenshots/reversi-legal-flips.png)
+
+Reversi local match with legal move indicators, score, and flipped-disc highlighting.
 
 ## Tech Stack
 
@@ -115,6 +125,25 @@ cd frontend
 npm install
 npm run typecheck
 npm run build
+npm run test:smoke
+```
+
+The frontend smoke suite uses Playwright and starts both local servers automatically: FastAPI on `127.0.0.1:8000` and Vite on `127.0.0.1:5173`. If Playwright has not installed its browser binary yet, run this once from `frontend/`:
+
+```bash
+npx playwright install chromium
+```
+
+Full local validation order:
+
+```bash
+python3 -m compileall backend
+python3 -c "from backend.tests import test_medium_ai_takes_winning_move, test_medium_ai_blocks_immediate_threat, test_hard_ai_prefers_center_opening, test_connect_four_returns_winning_cells, test_tictactoe_returns_winning_cells, test_tictactoe_draw_detection, test_tictactoe_medium_ai_takes_winning_move, test_tictactoe_medium_ai_blocks_immediate_threat, test_tictactoe_hard_ai_prefers_center_opening, test_reversi_initial_board_state, test_reversi_starting_legal_moves, test_reversi_move_application_flips_discs, test_reversi_invalid_move_rejection, test_reversi_pass_turn_behavior, test_reversi_game_over_scoring_draw, test_reversi_ai_move_generation; test_medium_ai_takes_winning_move(); test_medium_ai_blocks_immediate_threat(); test_hard_ai_prefers_center_opening(); test_connect_four_returns_winning_cells(); test_tictactoe_returns_winning_cells(); test_tictactoe_draw_detection(); test_tictactoe_medium_ai_takes_winning_move(); test_tictactoe_medium_ai_blocks_immediate_threat(); test_tictactoe_hard_ai_prefers_center_opening(); test_reversi_initial_board_state(); test_reversi_starting_legal_moves(); test_reversi_move_application_flips_discs(); test_reversi_invalid_move_rejection(); test_reversi_pass_turn_behavior(); test_reversi_game_over_scoring_draw(); test_reversi_ai_move_generation(); print('backend smoke tests passed')"
+cd frontend
+npm install
+npm run typecheck
+npm run build
+npm run test:smoke
 ```
 
 Whitespace check before committing:
@@ -139,6 +168,7 @@ git diff --check
 - Configure the frontend build with `VITE_API_BASE_URL` when the API is not available at `http://127.0.0.1:8000`.
 - Do not commit secrets or local environment files.
 - Generated artifacts such as `frontend/dist`, `frontend/node_modules`, Python bytecode, `.DS_Store`, and local env files should remain ignored.
+- Playwright reports, traces, videos, and test result folders should remain ignored unless a specific debugging artifact is intentionally shared outside the repo.
 - CORS is currently permissive for local development and should be tightened before a public deployment.
 
 ## Current Limitations
@@ -148,7 +178,7 @@ git diff --check
 - Multiple backend workers would not share game state.
 - Local match stats are per-browser and can be cleared with site data.
 - No LLM API calls are wired into gameplay or explanations.
-- No formal frontend test suite.
+- Frontend smoke coverage is intentionally lightweight and browser-based; it does not replace exhaustive component or visual regression testing.
 - ESLint is not configured yet; the current lightweight frontend quality gate is TypeScript typechecking plus the production build.
 - Backend smoke tests are simple Python functions; pytest is not listed as a dependency.
 - Reversi hard AI is bounded for local responsiveness and is not a tournament-strength engine.
@@ -156,7 +186,7 @@ git diff --check
 ## Future Roadmap
 
 - Add Gomoku as the fourth playable game.
-- Add a small automated frontend test suite for critical flows.
-- Add real screenshots and optional hosted-demo links.
+- Add optional hosted-demo links.
+- Consider ESLint or a small unit-test layer once the public demo surface stabilizes.
 - Add stricter production CORS and deployment configuration.
 - Consider persistent match history after the local-first demo is stable.

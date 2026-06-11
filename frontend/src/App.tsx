@@ -200,7 +200,7 @@ export function App() {
   }, [game, recordedGameIds]);
 
   return (
-    <main className="app-shell">
+    <main className="app-shell" data-testid="app-shell">
       <GameSidebar
         activeGame={activeGame}
         aiMessage={aiMessage}
@@ -286,14 +286,14 @@ export function App() {
             )}
           </article>
 
-          <article className="catalog-panel">
+          <article className="catalog-panel" data-testid="arena-catalog">
             <div className="panel-heading">
               <p className="eyebrow">Arena catalog</p>
               <h2>Choose a table</h2>
             </div>
             <div className="catalog-row">
               {gameCatalog.map((item) => (
-                <article className={`game-card ${item.id === activeGame ? "selected" : ""}`} key={item.id}>
+                <article className={`game-card ${item.id === activeGame ? "selected" : ""}`} data-testid={`game-card-${item.id}`} key={item.id}>
                   <span>{item.status}</span>
                   <h3>{item.name}</h3>
                   <p>{item.summary}</p>
