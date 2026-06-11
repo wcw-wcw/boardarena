@@ -114,6 +114,14 @@ VITE_API_BASE_URL=https://your-api.example.com npm run build
 
 ## Validation
 
+Run the full local validation helper from the repository root:
+
+```bash
+npm run validate:local
+```
+
+The helper runs the backend compile check, backend smoke tests, frontend dependency install, TypeScript typecheck, production build, and local Playwright smoke suite in order.
+
 Backend compile check:
 
 ```bash
@@ -169,14 +177,14 @@ git diff --check
 - The React app shares contextual setup, AI stepping, spectator controls, history, stats, and compact game navigation across games while keeping board rendering game-specific.
 - Reversi includes directional scanning, multi-direction flipping, forced-pass handling, and score-based terminal states.
 
-## Deployment Notes
+## Deployment
 
 BoardArena deploys as two pieces:
 
 - **Frontend**: a static Vite build from `frontend/`.
 - **Backend**: a FastAPI ASGI service from `backend.app.main:app`.
 
-You can host the pieces on any platform that supports static sites plus Python ASGI services. The frontend build must know the deployed API URL, and the backend must allow the deployed frontend origin with CORS.
+You can host the pieces on any platform that supports static sites plus Python ASGI services. The frontend build must know the deployed API URL, and the backend must allow the deployed frontend origin with CORS. Do not hardcode production URLs into source code; set environment variables in the hosting provider.
 
 Required production configuration:
 
@@ -188,15 +196,98 @@ Required production configuration:
 
 Health endpoints are available at `/health` and `/api/health`. They return app status, app name, environment, and version without exposing sensitive environment variables.
 
-Production validation checklist:
+### Backend Service
+
+Configure the Python service from the repository root or with `backend/` as the app directory, depending on the provider. The ASGI app import path is:
+
+```text
+backend.app.main:app
+```
+
+Typical install/start commands:
+
+```bash
+python3 -m pip install -r backend/requirements.txt
+python3 -m uvicorn backend.app.main:app --host 0.0.0.0 --port "$PORT"
+```
+
+Set backend environment variables:
+
+```text
+ALLOWED_ORIGINS=https://your-frontend.example.com
+APP_ENV=production
+```
+
+After the backend deploys, verify health:
+
+```bash
+curl -sS https://your-api.example.com/health
+curl -sS https://your-api.example.com/api/health
+```
+
+Both responses should include `"status":"ok"`.
+
+### Frontend Static Site
+
+Configure the static site with `frontend/` as the project directory.
+
+Typical commands:
+
+```bash
+npm install
+VITE_API_BASE_URL=https://your-api.example.com npm run build
+```
+
+Publish the generated directory:
+
+```text
+frontend/dist
+```
+
+Set the frontend environment variable in the hosting provider before building:
+
+```text
+VITE_API_BASE_URL=https://your-api.example.com
+```
+
+### Production Smoke Checks
+
+After both services are deployed, run the production smoke script from the repository root:
+
+```bash
+PUBLIC_FRONTEND_URL=https://your-frontend.example.com PUBLIC_API_BASE_URL=https://your-api.example.com npm run smoke:production
+```
+
+The script checks:
+
+- `/health` and `/api/health` return `status: "ok"`.
+- The frontend URL returns an HTML page.
+- CORS preflight allows the deployed frontend origin.
+- Connect 4, Tic-Tac-Toe, and Reversi game creation works.
+- One valid human move works for each playable game.
+
+The script prints `PASS`, `FAIL`, and `INFO` lines and exits nonzero on failure. It does not require secrets.
+
+### Deployment Checklist
 
 - Run `python3 -m compileall backend`.
 - Run the backend smoke tests from the Validation section.
 - Run `npm run typecheck` from `frontend/`.
 - Run `npm run build` from `frontend/` with the production `VITE_API_BASE_URL`.
 - Run `npm run test:smoke` from `frontend/` for local browser smoke coverage.
+- Deploy the backend with `ALLOWED_ORIGINS` set to the deployed frontend origin.
+- Deploy the frontend with `VITE_API_BASE_URL` set to the deployed backend origin.
+- Confirm the deployed API health endpoints return `status: "ok"`.
+- Run `npm run smoke:production` with `PUBLIC_FRONTEND_URL` and `PUBLIC_API_BASE_URL`.
 - Open the deployed frontend in a browser and start a match against the deployed API.
-- Confirm the deployed API health endpoint returns `status: "ok"`.
+
+### Common Deployment Failures
+
+- **Frontend cannot reach backend**: confirm the backend service is running and `VITE_API_BASE_URL` was set before the frontend build.
+- **CORS origin not allowed**: set `ALLOWED_ORIGINS` to the exact frontend origin, such as `https://boardarena.example.com`, without a path.
+- **Wrong API base URL**: use the backend origin only, for example `https://api.example.com`, not `https://api.example.com/health` or a frontend URL.
+- **Backend service sleeping or cold start**: retry health checks after the service wakes; first API calls may be slower on free or scale-to-zero hosts.
+- **In-memory sessions are process-local**: sessions reset on backend restart and are not shared across multiple backend workers or regions.
 
 Do not commit secrets or local environment files. Generated artifacts such as `frontend/dist`, `frontend/node_modules`, Python bytecode, `.DS_Store`, and local env files should remain ignored. Playwright reports, traces, videos, and test result folders should remain ignored unless a specific debugging artifact is intentionally shared outside the repo.
 

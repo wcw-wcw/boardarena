@@ -1,0 +1,10 @@
+{
+  "name": "boardarena",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "smoke:production": "node scripts/smoke-production.mjs",
+    "validate:local": "node scripts/validate-local.mjs"
+  }
+}
