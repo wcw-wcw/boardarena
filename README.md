@@ -250,6 +250,14 @@ Set the frontend environment variable in the hosting provider before building:
 VITE_API_BASE_URL=https://your-api.example.com
 ```
 
+For a single Vercel project with the included `vercel.json` multi-service config, the frontend is served at `/` and the backend is served at `/_backend`. In that setup, set the frontend build variable to the same-origin route prefix:
+
+```text
+VITE_API_BASE_URL=/_backend
+```
+
+Keep the backend `ALLOWED_ORIGINS` value set to the exact deployed frontend origin, for example `https://your-app.vercel.app`.
+
 ### Production Smoke Checks
 
 After both services are deployed, run the production smoke script from the repository root:
