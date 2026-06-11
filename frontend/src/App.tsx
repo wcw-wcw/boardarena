@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createGame, makeAiMove, makeHumanCellMove, makeHumanMove } from "./api/games";
 import { ConnectFourBoard } from "./components/ConnectFourBoard";
-import { GameSidebar } from "./components/GameSidebar";
 import { ReversiBoard } from "./components/ReversiBoard";
 import { TicTacToeBoard } from "./components/TicTacToeBoard";
-import { gameCatalog, gameName } from "./games/registry";
+import { gameCatalog, gameName, playableGames } from "./games/registry";
 import type { AiMetadata, AiStrategy, GameMode, GameState, GameType } from "./games/connect4/types";
-import { modeLabel, moveLabel, playerName } from "./lib/gameCopy";
+import { difficultyLabel, legalMoveLabel, modeLabel, moveLabel, playerName } from "./lib/gameCopy";
 
 type SpectatorSpeed = "slow" | "normal" | "fast";
 
@@ -27,6 +26,10 @@ const defaultStats: MatchStats = {
   aiWinsVsHuman: 0,
   recentResults: [],
 };
+
+const modes: GameMode[] = ["pvp", "pvai", "aivai"];
+const difficulties: AiStrategy[] = ["easy", "medium", "hard"];
+const speeds: SpectatorSpeed[] = ["slow", "normal", "fast"];
 
 const speedDelay: Record<SpectatorSpeed, number> = {
   slow: 1100,
@@ -76,23 +79,45 @@ function applyFinishedGame(stats: MatchStats, game: GameState): MatchStats {
   return next;
 }
 
+function playerDotClass(gameType: GameType, player: 1 | 2): string {
+  if (gameType === "connect4") return player === 1 ? "red-dot" : "yellow-dot";
+  if (gameType === "reversi") return player === 1 ? "black-dot" : "white-dot";
+  return player === 1 ? "x-dot" : "o-dot";
+}
+
+function chosenMoveLabel(activeGame: GameType, aiMetadata: AiMetadata | null): string {
+  if (
+    aiMetadata?.chosen_row !== null &&
+    aiMetadata?.chosen_row !== undefined &&
+    aiMetadata?.chosen_column !== null &&
+    aiMetadata?.chosen_column !== undefined
+  ) {
+    return moveLabel(activeGame, aiMetadata.chosen_row, aiMetadata.chosen_column);
+  }
+  if (aiMetadata?.chosen_column !== null && aiMetadata?.chosen_column !== undefined) {
+    return moveLabel(activeGame, 0, aiMetadata.chosen_column);
+  }
+  return "-";
+}
+
 export function App() {
   const [activeGame, setActiveGame] = useState<GameType>("connect4");
   const [mode, setMode] = useState<GameMode>("pvai");
   const [difficulty, setDifficulty] = useState<AiStrategy>("medium");
   const [game, setGame] = useState<GameState | null>(null);
-  const [aiMessage, setAiMessage] = useState("Start a game and AI explanations will appear here.");
+  const [aiMessage, setAiMessage] = useState("Choose a game and the AI notes will appear here.");
   const [aiMetadata, setAiMetadata] = useState<AiMetadata | null>(null);
   const [spectatorPaused, setSpectatorPaused] = useState(false);
   const [spectatorSpeed, setSpectatorSpeed] = useState<SpectatorSpeed>("normal");
   const [stats, setStats] = useState<MatchStats>(() => loadStats("connect4"));
   const [recordedGameIds, setRecordedGameIds] = useState<Set<string>>(() => new Set());
   const [error, setError] = useState("");
-  const [hasStartedOnce, setHasStartedOnce] = useState(false);
   const [isBusy, setIsBusy] = useState(false);
+  const [setupOpen, setSetupOpen] = useState(true);
+  const [catalogOpen, setCatalogOpen] = useState(false);
 
   const turnSummary = useMemo(() => {
-    if (!game) return "Set a mode and start a new game.";
+    if (!game) return "Choose your table";
     if (game.winner === 0) return "Draw";
     if (game.winner === 1 || game.winner === 2) {
       const score = game.score ? ` ${game.score[String(game.winner)]}-${game.score[String(game.winner === 1 ? 2 : 1)]}` : "";
@@ -102,6 +127,10 @@ export function App() {
     return `${playerName(game.game_type, game.current_player)} to move`;
   }, [game]);
 
+  const currentPlayerType = game?.player_types[String(game.current_player)];
+  const aiCanMove = game?.status === "in_progress" && currentPlayerType === "ai";
+  const isSpectatorMatch = game?.mode === "aivai";
+
   const startGame = useCallback(async () => {
     setIsBusy(true);
     setError("");
@@ -110,8 +139,9 @@ export function App() {
       setGame(nextGame);
       setAiMetadata(null);
       setSpectatorPaused(false);
-      setHasStartedOnce(true);
-      setAiMessage(mode === "pvp" ? "Local two-player game ready." : `${modeLabel(mode)} ready on ${difficulty} difficulty.`);
+      setSetupOpen(false);
+      setCatalogOpen(false);
+      setAiMessage(mode === "pvp" ? "Local two-player game ready." : `${modeLabel(mode)} ready on ${difficultyLabel(difficulty)} difficulty.`);
     } catch (err) {
       setGame(null);
       setError(err instanceof Error ? err.message : "Unable to create a game. Check that the backend is running.");
@@ -119,6 +149,20 @@ export function App() {
       setIsBusy(false);
     }
   }, [activeGame, difficulty, mode]);
+
+  const selectGame = useCallback(
+    (gameType: GameType) => {
+      setActiveGame(gameType);
+      setStats(loadStats(gameType));
+      setGame(null);
+      setAiMetadata(null);
+      setAiMessage("Choose a setup and start a match.");
+      setError("");
+      setSetupOpen(true);
+      setCatalogOpen(false);
+    },
+    [],
+  );
 
   const runAiTurn = useCallback(async () => {
     if (!game || game.status === "finished") return;
@@ -173,17 +217,13 @@ export function App() {
   );
 
   useEffect(() => {
-    void startGame();
-  }, [startGame]);
-
-  useEffect(() => {
     setStats(loadStats(activeGame));
   }, [activeGame]);
 
   useEffect(() => {
     if (!game || isBusy || game.status === "finished") return;
-    const currentPlayerType = game.player_types[String(game.current_player)];
-    if (currentPlayerType === "ai" && (game.mode !== "aivai" || !spectatorPaused)) {
+    const playerType = game.player_types[String(game.current_player)];
+    if (playerType === "ai" && (game.mode !== "aivai" || !spectatorPaused)) {
       const timer = window.setTimeout(() => void runAiTurn(), game.mode === "aivai" ? speedDelay[spectatorSpeed] : 450);
       return () => window.clearTimeout(timer);
     }
@@ -201,117 +241,370 @@ export function App() {
 
   return (
     <main className="app-shell" data-testid="app-shell">
-      <GameSidebar
-        activeGame={activeGame}
-        aiMessage={aiMessage}
-        aiMetadata={aiMetadata}
-        difficulty={difficulty}
-        game={game}
-        isBusy={isBusy}
-        mode={mode}
-        onAiTurn={runAiTurn}
-        onDifficultyChange={setDifficulty}
-        onModeChange={setMode}
-        onNewGame={startGame}
-        onSpectatorPausedChange={setSpectatorPaused}
-        onSpectatorSpeedChange={setSpectatorSpeed}
-        spectatorPaused={spectatorPaused}
-        spectatorSpeed={spectatorSpeed}
-        stats={stats}
-      />
-
-      <section className="play-surface">
-        <div className="top-bar">
-          <div>
-            <p className="eyebrow">Current match</p>
-            <h2>{turnSummary}</h2>
-          </div>
-          <div className="score-strip">
-            <span className={`player-dot ${activeGame === "connect4" ? "red-dot" : activeGame === "reversi" ? "black-dot" : "x-dot"}`} />
-            <strong>{playerName(activeGame, 1)}</strong>
-            {game?.score ? <em>{game.score["1"]}</em> : null}
-            <span className={`player-dot ${activeGame === "connect4" ? "yellow-dot" : activeGame === "reversi" ? "white-dot" : "o-dot"}`} />
-            <strong>{playerName(activeGame, 2)}</strong>
-            {game?.score ? <em>{game.score["2"]}</em> : null}
-          </div>
+      <header className="arena-topbar">
+        <button className="brand-mark" onClick={() => setCatalogOpen(true)} type="button">
+          <span>BoardArena</span>
+          <strong>{gameName(activeGame)}</strong>
+        </button>
+        <nav className="game-tabs" aria-label="Game selection">
+          {playableGames.map((item) => (
+            <button className={item.id === activeGame ? "selected" : ""} key={item.id} onClick={() => selectGame(item.id)} type="button">
+              {item.name}
+            </button>
+          ))}
+        </nav>
+        <div className="top-actions">
+          <button className="secondary-button" onClick={() => setCatalogOpen(true)} type="button">
+            Change game
+          </button>
+          <button className="primary-button" disabled={isBusy} onClick={() => setSetupOpen(true)} type="button">
+            {game ? "Change setup" : "Setup match"}
+          </button>
         </div>
+      </header>
 
-        {error ? (
-          <div className="error-banner" role="alert">
-            <strong>Action needed</strong>
-            <span>{error}</span>
+      {catalogOpen ? (
+        <section className="catalog-drawer" data-testid="arena-catalog" aria-label="Arena catalog">
+          <div className="drawer-heading">
+            <div>
+              <p className="eyebrow">Choose a table</p>
+              <h2>BoardArena catalog</h2>
+            </div>
+            <button className="ghost-button" onClick={() => setCatalogOpen(false)} type="button">
+              Close
+            </button>
+          </div>
+          <div className="catalog-row">
+            {gameCatalog.map((item) => (
+              <article className={`game-card ${item.id === activeGame ? "selected" : ""}`} data-testid={`game-card-${item.id}`} key={item.id}>
+                <span>{item.status}</span>
+                <h3>{item.name}</h3>
+                <p>{item.summary}</p>
+                {item.playable ? (
+                  <button
+                    className="catalog-button"
+                    disabled={item.id === activeGame}
+                    onClick={() => selectGame(item.id as GameType)}
+                    type="button"
+                  >
+                    {item.id === activeGame ? "Selected" : `Play ${gameName(item.id as GameType)}`}
+                  </button>
+                ) : (
+                  <button className="catalog-button" disabled type="button">
+                    Coming soon
+                  </button>
+                )}
+              </article>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
+      {!game ? (
+        <section className="home-stage">
+          <div className="home-copy">
+            <p className="eyebrow">Local-first board game tables</p>
+            <h1>Pick a table, set the match, and play.</h1>
+            <p>
+              Backend-owned rules, local stats, move history, and transparent AI decisions are ready for Connect 4, Tic-Tac-Toe, and Reversi.
+            </p>
+          </div>
+          <section className="setup-panel home-setup" aria-label="Match setup">
+            <SetupControls
+              difficulty={difficulty}
+              isBusy={isBusy}
+              mode={mode}
+              onDifficultyChange={setDifficulty}
+              onModeChange={setMode}
+              onStart={startGame}
+              selectedGameName={gameName(activeGame)}
+            />
+          </section>
+          {error ? <ErrorBanner error={error} onRetry={startGame} isBusy={isBusy} /> : null}
+        </section>
+      ) : (
+        <section className="game-stage" aria-label={`${gameName(activeGame)} active match`}>
+          <div className="match-hud">
+            <div className="match-title">
+              <p className="eyebrow">{modeLabel(game.mode)}</p>
+              <h1>{gameName(activeGame)}</h1>
+            </div>
+            <div className="turn-card" aria-live="polite">
+              <span className={`player-dot ${playerDotClass(activeGame, game.current_player)}`} />
+              <div>
+                <p>{game.status === "finished" ? "Match over" : "Current turn"}</p>
+                <strong>{turnSummary}</strong>
+              </div>
+            </div>
+            <div className="score-strip">
+              <span className={`player-dot ${playerDotClass(activeGame, 1)}`} />
+              <strong>{playerName(activeGame, 1)}</strong>
+              {game.score ? <em>{game.score["1"]}</em> : null}
+              <span className={`player-dot ${playerDotClass(activeGame, 2)}`} />
+              <strong>{playerName(activeGame, 2)}</strong>
+              {game.score ? <em>{game.score["2"]}</em> : null}
+            </div>
+          </div>
+
+          {error ? <ErrorBanner error={error} onRetry={startGame} isBusy={isBusy} /> : null}
+
+          {setupOpen ? (
+            <section className="setup-panel setup-popover" aria-label="Game mode">
+              <div className="drawer-heading">
+                <div>
+                  <p className="eyebrow">Applies to next match</p>
+                  <h2>Match setup</h2>
+                </div>
+                <button className="ghost-button" onClick={() => setSetupOpen(false)} type="button">
+                  Close
+                </button>
+              </div>
+              <SetupControls
+                difficulty={difficulty}
+                isBusy={isBusy}
+                mode={mode}
+                onDifficultyChange={setDifficulty}
+                onModeChange={setMode}
+                onStart={startGame}
+                selectedGameName={gameName(activeGame)}
+              />
+            </section>
+          ) : null}
+
+          <div className="stage-grid">
+            <aside className="hud-column left-hud">
+              <HistoryPanel game={game} />
+              <StatsPanel activeGame={activeGame} stats={stats} />
+            </aside>
+
+            <section className="board-stage" aria-label="Game board">
+              {activeGame === "connect4" ? (
+                <ConnectFourBoard game={game} isBusy={isBusy} onColumnSelect={playColumn} />
+              ) : activeGame === "reversi" ? (
+                <ReversiBoard game={game} isBusy={isBusy} onCellSelect={playCell} />
+              ) : (
+                <TicTacToeBoard game={game} isBusy={isBusy} onCellSelect={playCell} />
+              )}
+            </section>
+
+            <aside className="hud-column right-hud">
+              <section className="match-controls hud-panel" aria-label="Match controls">
+                <div className="compact-actions">
+                  <button className="primary-button" disabled={isBusy} onClick={startGame} type="button">
+                    New match
+                  </button>
+                  <button className="secondary-button" onClick={() => setSetupOpen(true)} type="button">
+                    Change setup
+                  </button>
+                </div>
+                {isSpectatorMatch ? (
+                  <div className="spectator-controls" aria-label="AI spectator controls">
+                    <div className="compact-actions">
+                      <button
+                        className="secondary-button"
+                        disabled={game.status === "finished"}
+                        onClick={() => setSpectatorPaused(!spectatorPaused)}
+                        type="button"
+                      >
+                        {spectatorPaused ? "Resume" : "Pause"}
+                      </button>
+                      <button className="secondary-button" disabled={!aiCanMove || isBusy} onClick={runAiTurn} type="button">
+                        Step AI
+                      </button>
+                    </div>
+                    <div className="segmented compact" aria-label="AI speed">
+                      {speeds.map((speed) => (
+                        <button
+                          className={speed === spectatorSpeed ? "selected" : ""}
+                          key={speed}
+                          onClick={() => setSpectatorSpeed(speed)}
+                          type="button"
+                        >
+                          {speed}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </section>
+
+              <AiPanel activeGame={activeGame} aiMessage={aiMessage} aiMetadata={aiMetadata} difficulty={difficulty} mode={mode} />
+            </aside>
+          </div>
+        </section>
+      )}
+    </main>
+  );
+}
+
+interface SetupControlsProps {
+  difficulty: AiStrategy;
+  isBusy: boolean;
+  mode: GameMode;
+  onDifficultyChange: (difficulty: AiStrategy) => void;
+  onModeChange: (mode: GameMode) => void;
+  onStart: () => void;
+  selectedGameName: string;
+}
+
+function SetupControls({ difficulty, isBusy, mode, onDifficultyChange, onModeChange, onStart, selectedGameName }: SetupControlsProps) {
+  const showDifficulty = mode !== "pvp";
+
+  return (
+    <>
+      <div className="setup-summary">
+        <span>Selected table</span>
+        <strong>{selectedGameName}</strong>
+      </div>
+      <section className="control-section" aria-label="Game mode">
+        <h2>Mode</h2>
+        <div className="segmented mode-options">
+          {modes.map((item) => (
+            <button className={item === mode ? "selected" : ""} key={item} onClick={() => onModeChange(item)} type="button">
+              {modeLabel(item)}
+            </button>
+          ))}
+        </div>
+      </section>
+      {showDifficulty ? (
+        <section className="control-section" aria-label="AI difficulty">
+          <h2>AI difficulty</h2>
+          <div className="segmented compact">
+            {difficulties.map((item) => (
+              <button className={item === difficulty ? "selected" : ""} key={item} onClick={() => onDifficultyChange(item)} type="button">
+                {difficultyLabel(item)}
+              </button>
+            ))}
+          </div>
+        </section>
+      ) : (
+        <p className="setup-note">Local Play uses two human players, so AI difficulty is hidden for this match.</p>
+      )}
+      <button className="primary-button start-button" disabled={isBusy} onClick={onStart} type="button">
+        {isBusy ? "Starting..." : "Start match"}
+      </button>
+    </>
+  );
+}
+
+function ErrorBanner({ error, isBusy, onRetry }: { error: string; isBusy: boolean; onRetry: () => void }) {
+  return (
+    <div className="error-banner" role="alert">
+      <div>
+        <strong>Action needed</strong>
+        <span>{error}</span>
+      </div>
+      <button className="secondary-button" disabled={isBusy} onClick={onRetry} type="button">
+        Retry connection
+      </button>
+    </div>
+  );
+}
+
+function HistoryPanel({ game }: { game: GameState }) {
+  return (
+    <article className="history-panel hud-panel">
+      <div className="panel-heading">
+        <p className="eyebrow">Timeline</p>
+        <h2>Move history</h2>
+      </div>
+      {game.history.length ? (
+        <ol className="move-list">
+          {game.history.map((move) => (
+            <li key={move.turn}>
+              <span>#{move.turn}</span>
+              <strong>{playerName(game.game_type, move.player)}</strong>
+              <em>{moveLabel(game.game_type, move.row, move.column)}</em>
+            </li>
+          ))}
+        </ol>
+      ) : (
+        <p className="muted">No moves yet.</p>
+      )}
+    </article>
+  );
+}
+
+function StatsPanel({ activeGame, stats }: { activeGame: GameType; stats: MatchStats }) {
+  return (
+    <section className="stats-panel hud-panel" aria-label="Local match stats">
+      <div className="panel-heading">
+        <p className="eyebrow">Local stats</p>
+        <h2>Match record</h2>
+      </div>
+      <div className="stats-grid">
+        <span>Total</span>
+        <strong>{stats.totalGames}</strong>
+        <span>{playerName(activeGame, 1)} wins</span>
+        <strong>{stats.playerWins["1"]}</strong>
+        <span>{playerName(activeGame, 2)} wins</span>
+        <strong>{stats.playerWins["2"]}</strong>
+        <span>Draws</span>
+        <strong>{stats.draws}</strong>
+        <span>Human vs AI</span>
+        <strong>
+          {stats.humanWinsVsAi}-{stats.aiWinsVsHuman}
+        </strong>
+      </div>
+      <ul className="recent-results">
+        {stats.recentResults.length ? stats.recentResults.map((result, index) => <li key={`${result}-${index}`}>{result}</li>) : <li>No completed local games yet.</li>}
+      </ul>
+    </section>
+  );
+}
+
+function AiPanel({
+  activeGame,
+  aiMessage,
+  aiMetadata,
+  difficulty,
+  mode,
+}: {
+  activeGame: GameType;
+  aiMessage: string;
+  aiMetadata: AiMetadata | null;
+  difficulty: AiStrategy;
+  mode: GameMode;
+}) {
+  return (
+    <section className="ai-panel hud-panel" aria-label="AI explanation">
+      <div className="panel-heading">
+        <p className="eyebrow">AI explainability</p>
+        <h2>Move explanation</h2>
+      </div>
+      <p>{aiMessage || "Start a game and the AI will explain its moves here."}</p>
+      <dl className="metadata-grid">
+        <div>
+          <dt>Chosen move</dt>
+          <dd>{chosenMoveLabel(activeGame, aiMetadata)}</dd>
+        </div>
+        <div>
+          <dt>Strategy</dt>
+          <dd>{aiMetadata?.strategy ? difficultyLabel(aiMetadata.strategy) : mode === "pvp" ? "None" : difficultyLabel(difficulty)}</dd>
+        </div>
+        <div>
+          <dt>Reason</dt>
+          <dd>{aiMetadata?.reason?.replaceAll("_", " ") ?? "-"}</dd>
+        </div>
+        <div>
+          <dt>Depth</dt>
+          <dd>{aiMetadata?.depth ?? "-"}</dd>
+        </div>
+        <div>
+          <dt>Score</dt>
+          <dd>{aiMetadata?.score ?? "-"}</dd>
+        </div>
+        <div>
+          <dt>Legal moves</dt>
+          <dd>{aiMetadata?.legal_moves_considered?.map((move) => legalMoveLabel(activeGame, move)).join(", ") ?? "-"}</dd>
+        </div>
+        {activeGame === "reversi" ? (
+          <div>
+            <dt>Flipped</dt>
+            <dd>{aiMetadata?.flipped_cell_count ?? "-"}</dd>
           </div>
         ) : null}
-        {!game && (isBusy || !hasStartedOnce || error) ? (
-          <section className={`empty-state ${error ? "offline-state" : ""}`} aria-live="polite">
-            <p className="eyebrow">{error ? "Backend connection" : "Preparing match"}</p>
-            <h2>{error ? "The arena is waiting for the API." : "Setting up the board..."}</h2>
-            <p>
-              {error
-                ? "Run the FastAPI backend on 127.0.0.1:8000 or set VITE_API_BASE_URL to your deployed API, then start a new match."
-                : "BoardArena is creating a local session with backend-owned rule validation."}
-            </p>
-            {error ? (
-              <button className="primary-button inline-action" disabled={isBusy} onClick={startGame} type="button">
-                Retry connection
-              </button>
-            ) : null}
-          </section>
-        ) : activeGame === "connect4" ? (
-          <ConnectFourBoard game={game} isBusy={isBusy} onColumnSelect={playColumn} />
-        ) : activeGame === "reversi" ? (
-          <ReversiBoard game={game} isBusy={isBusy} onCellSelect={playCell} />
-        ) : (
-          <TicTacToeBoard game={game} isBusy={isBusy} onCellSelect={playCell} />
-        )}
-
-        <section className="details-grid" aria-label="Match details">
-          <article className="history-panel">
-            <div className="panel-heading">
-              <p className="eyebrow">Timeline</p>
-              <h2>Move history</h2>
-            </div>
-            {game?.history.length ? (
-              <ol className="move-list">
-                {game.history.map((move) => (
-                  <li key={move.turn}>
-                    <span>#{move.turn}</span>
-                    <strong>{playerName(game.game_type, move.player)}</strong>
-                    <em>{moveLabel(game.game_type, move.row, move.column)}</em>
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <p className="muted">No moves yet.</p>
-            )}
-          </article>
-
-          <article className="catalog-panel" data-testid="arena-catalog">
-            <div className="panel-heading">
-              <p className="eyebrow">Arena catalog</p>
-              <h2>Choose a table</h2>
-            </div>
-            <div className="catalog-row">
-              {gameCatalog.map((item) => (
-                <article className={`game-card ${item.id === activeGame ? "selected" : ""}`} data-testid={`game-card-${item.id}`} key={item.id}>
-                  <span>{item.status}</span>
-                  <h3>{item.name}</h3>
-                  <p>{item.summary}</p>
-                  {item.playable ? (
-                    <button className="catalog-button" disabled={item.id === activeGame} onClick={() => setActiveGame(item.id as GameType)} type="button">
-                      {item.id === activeGame ? "Selected" : `Play ${gameName(item.id as GameType)}`}
-                    </button>
-                  ) : (
-                    <button className="catalog-button" disabled type="button">
-                      Coming soon
-                    </button>
-                  )}
-                </article>
-              ))}
-            </div>
-          </article>
-        </section>
-      </section>
-    </main>
+      </dl>
+    </section>
   );
 }

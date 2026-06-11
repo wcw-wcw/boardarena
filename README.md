@@ -24,17 +24,17 @@ BoardArena is a local-first AI board-game arena built with React, Vite, TypeScri
 
 ## Screenshots
 
-![BoardArena catalog showing the playable game cards](assets/screenshots/arena-catalog.png)
+![BoardArena home setup screen with game tabs and contextual match controls](assets/screenshots/arena-catalog.png)
 
-BoardArena catalog with the shared match controls and game picker.
+BoardArena home screen with compact game navigation and contextual match setup.
 
 ![Connect 4 match with AI explanation metadata](assets/screenshots/connect4-ai-explanation.png)
 
-Connect 4 human-vs-AI match with the AI explanation panel visible.
+Connect 4 human-vs-AI match with the board centered and AI explanation visible as a lightweight HUD panel.
 
 ![Reversi match showing legal move indicators and flipped discs](assets/screenshots/reversi-legal-flips.png)
 
-Reversi local match with legal move indicators, score, and flipped-disc highlighting.
+Reversi local match with legal move indicators, score, and flipped-disc highlighting in the redesigned game stage.
 
 ## Tech Stack
 
@@ -158,7 +158,7 @@ git diff --check
 - Rules engines keep validation authoritative on the server instead of trusting the client.
 - Game state responses expose the metadata each board needs while preserving a common frontend flow.
 - AI move responses include structured explanation metadata for a transparent demo experience.
-- The React app shares mode controls, AI stepping, spectator controls, history, stats, and catalog behavior across games while keeping board rendering game-specific.
+- The React app shares contextual setup, AI stepping, spectator controls, history, stats, and compact game navigation across games while keeping board rendering game-specific.
 - Reversi includes directional scanning, multi-direction flipping, forced-pass handling, and score-based terminal states.
 
 ## Deployment Notes
