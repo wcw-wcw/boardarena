@@ -106,7 +106,7 @@ Open:
 http://127.0.0.1:5173/
 ```
 
-The frontend defaults to `http://127.0.0.1:8000` for the API. For a different local or deployed API, set `VITE_API_BASE_URL` when running or building the frontend:
+The frontend defaults to `http://127.0.0.1:8000` during local Vite development and `/_backend` for production builds. For a different local or deployed API, set `VITE_API_BASE_URL` when running or building the frontend:
 
 ```bash
 VITE_API_BASE_URL=https://your-api.example.com npm run build
@@ -184,13 +184,13 @@ BoardArena deploys as two pieces:
 - **Frontend**: a static Vite build from `frontend/`.
 - **Backend**: a FastAPI ASGI service from `backend.app.main:app`.
 
-You can host the pieces on any platform that supports static sites plus Python ASGI services. The frontend build must know the deployed API URL, and the backend must allow the deployed frontend origin with CORS. Do not hardcode production URLs into source code; set environment variables in the hosting provider.
+You can host the pieces on any platform that supports static sites plus Python ASGI services. The frontend build must know the deployed API URL, and the backend must allow the deployed frontend origin with CORS. The included Vercel multi-service config defaults production builds to `/_backend`; set environment variables in the hosting provider when overriding that route or hosting the API separately.
 
 Required production configuration:
 
 | Location | Variable | Example | Notes |
 | --- | --- | --- | --- |
-| Frontend | `VITE_API_BASE_URL` | `https://api.example.com` | Used at Vite build time. Leave unset only when the browser should call the local default `http://127.0.0.1:8000`. |
+| Frontend | `VITE_API_BASE_URL` | `https://api.example.com` | Optional override used at Vite build time. Leave unset for the included Vercel same-origin backend at `/_backend`. |
 | Backend | `ALLOWED_ORIGINS` | `https://boardarena.example.com` | Comma-separated exact browser origins allowed by CORS. Local defaults are `http://127.0.0.1:5173,http://localhost:5173`. |
 | Backend | `APP_ENV` | `production` | Optional safe environment label returned by health endpoints. |
 
@@ -250,11 +250,13 @@ Set the frontend environment variable in the hosting provider before building:
 VITE_API_BASE_URL=https://your-api.example.com
 ```
 
-For a single Vercel project with the included `vercel.json` multi-service config, the frontend is served at `/` and the backend is served at `/_backend`. In that setup, set the frontend build variable to the same-origin route prefix:
+For a single Vercel project with the included `vercel.json` multi-service config, the frontend is served at `/` and the backend is served at `/_backend`. Production frontend builds default to that same-origin route prefix when `VITE_API_BASE_URL` is unset:
 
 ```text
 VITE_API_BASE_URL=/_backend
 ```
+
+You can still set the variable explicitly if you want to override the default.
 
 Keep the backend `ALLOWED_ORIGINS` value set to the exact deployed frontend origin, for example `https://your-app.vercel.app`.
 
@@ -281,17 +283,17 @@ The script prints `PASS`, `FAIL`, and `INFO` lines and exits nonzero on failure.
 - Run `python3 -m compileall backend`.
 - Run the backend smoke tests from the Validation section.
 - Run `npm run typecheck` from `frontend/`.
-- Run `npm run build` from `frontend/` with the production `VITE_API_BASE_URL`.
+- Run `npm run build` from `frontend/`. Set `VITE_API_BASE_URL` only when the API is not served from the same Vercel project at `/_backend`.
 - Run `npm run test:smoke` from `frontend/` for local browser smoke coverage.
 - Deploy the backend with `ALLOWED_ORIGINS` set to the deployed frontend origin.
-- Deploy the frontend with `VITE_API_BASE_URL` set to the deployed backend origin.
+- Deploy the frontend. For separate frontend/backend hosting, set `VITE_API_BASE_URL` to the deployed backend origin.
 - Confirm the deployed API health endpoints return `status: "ok"`.
 - Run `npm run smoke:production` with `PUBLIC_FRONTEND_URL` and `PUBLIC_API_BASE_URL`.
 - Open the deployed frontend in a browser and start a match against the deployed API.
 
 ### Common Deployment Failures
 
-- **Frontend cannot reach backend**: confirm the backend service is running and `VITE_API_BASE_URL` was set before the frontend build.
+- **Frontend cannot reach backend**: confirm the backend service is running. For separate frontend/backend hosting, confirm `VITE_API_BASE_URL` was set before the frontend build. For the included Vercel config, verify `/_backend/health`.
 - **CORS origin not allowed**: set `ALLOWED_ORIGINS` to the exact frontend origin, such as `https://boardarena.example.com`, without a path.
 - **Wrong API base URL**: use the backend origin only, for example `https://api.example.com`, not `https://api.example.com/health` or a frontend URL.
 - **Backend service sleeping or cold start**: retry health checks after the service wakes; first API calls may be slower on free or scale-to-zero hosts.

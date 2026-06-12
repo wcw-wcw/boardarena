@@ -1,11 +1,12 @@
 import type { AiStrategy, GameMode, GameState, GameType, MoveResponse, NewGameRequest } from "../games/connect4/types";
 
-// Vite inlines this at build time; set it when the API is not running on the local default.
-const DEFAULT_API_BASE_URL = "http://127.0.0.1:8000";
+const LOCAL_API_BASE_URL = "http://127.0.0.1:8000";
+const PRODUCTION_API_BASE_URL = "/_backend";
 
 function getApiBaseUrl(): string {
   const configuredUrl = import.meta.env.VITE_API_BASE_URL?.trim();
-  return (configuredUrl || DEFAULT_API_BASE_URL).replace(/\/+$/, "");
+  const defaultUrl = import.meta.env.DEV ? LOCAL_API_BASE_URL : PRODUCTION_API_BASE_URL;
+  return (configuredUrl || defaultUrl).replace(/\/+$/, "");
 }
 
 const API_BASE_URL = getApiBaseUrl();

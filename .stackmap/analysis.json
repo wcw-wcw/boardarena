@@ -1,0 +1,535 @@
+{
+  "repoPath": "/Users/will/Workspace/connect_four",
+  "repoName": "connect_four",
+  "generatedAt": "2026-06-12T08:43:39.309378-05:00",
+  "files": [
+    {
+      "path": ".gitignore",
+      "ext": "gitignore",
+      "sizeBytes": 337,
+      "kind": "config",
+      "hash": "e93ab59a66f0ccfb987f2d82c87a06991b015783"
+    },
+    {
+      "path": "README.md",
+      "ext": "md",
+      "language": "Markdown",
+      "sizeBytes": 12033,
+      "kind": "doc",
+      "hash": "ccaf4824472566b233649137df72a46e86ee50b6"
+    },
+    {
+      "path": "backend/.env.example",
+      "ext": "example",
+      "sizeBytes": 300,
+      "kind": "config",
+      "hash": "81c2aec56aa8a47fe4c7f1b447e5de3450aa3918"
+    },
+    {
+      "path": "backend/README_API.md",
+      "ext": "md",
+      "language": "Markdown",
+      "sizeBytes": 807,
+      "kind": "doc",
+      "hash": "be93ac9e8993ecfe549c58f7db46e15a2c5e207c"
+    },
+    {
+      "path": "backend/__init__.py",
+      "ext": "py",
+      "sizeBytes": 0,
+      "kind": "source",
+      "hash": "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+    },
+    {
+      "path": "backend/app/__init__.py",
+      "ext": "py",
+      "sizeBytes": 0,
+      "kind": "source",
+      "hash": "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+    },
+    {
+      "path": "backend/app/api/__init__.py",
+      "ext": "py",
+      "sizeBytes": 0,
+      "kind": "source",
+      "hash": "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+    },
+    {
+      "path": "backend/app/api/routes/__init__.py",
+      "ext": "py",
+      "sizeBytes": 0,
+      "kind": "source",
+      "hash": "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+    },
+    {
+      "path": "backend/app/api/routes/games.py",
+      "ext": "py",
+      "sizeBytes": 4207,
+      "kind": "source",
+      "hash": "09248bda47b50069b076bd43e627f0cab0a85234"
+    },
+    {
+      "path": "backend/app/config.py",
+      "ext": "py",
+      "sizeBytes": 777,
+      "kind": "source",
+      "hash": "61a76df51b80b9396986a072650ee52a80939acc"
+    },
+    {
+      "path": "backend/app/main.py",
+      "ext": "py",
+      "sizeBytes": 1523,
+      "kind": "source",
+      "hash": "c265c365d4efe70d8e47abe2578ddfe97d658a28"
+    },
+    {
+      "path": "backend/app/schemas/__init__.py",
+      "ext": "py",
+      "sizeBytes": 0,
+      "kind": "source",
+      "hash": "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+    },
+    {
+      "path": "backend/app/schemas/game.py",
+      "ext": "py",
+      "sizeBytes": 1976,
+      "kind": "source",
+      "hash": "51d573bb5ada71e2d63619726af84b1c3358832d"
+    },
+    {
+      "path": "backend/app/services/__init__.py",
+      "ext": "py",
+      "sizeBytes": 0,
+      "kind": "source",
+      "hash": "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+    },
+    {
+      "path": "backend/app/services/ai_service.py",
+      "ext": "py",
+      "sizeBytes": 1668,
+      "kind": "source",
+      "hash": "30e05b74d1d50525f05ab4e25b8bbc81fcb155e4"
+    },
+    {
+      "path": "backend/app/services/game_manager.py",
+      "ext": "py",
+      "sizeBytes": 3832,
+      "kind": "source",
+      "hash": "7810f8785f56d80b4b2c6c0f6a5bc79f9f735858"
+    },
+    {
+      "path": "backend/client.py",
+      "ext": "py",
+      "sizeBytes": 1980,
+      "kind": "source",
+      "hash": "b2b11d519639dac0619929f6902fe83b4ca3292f"
+    },
+    {
+      "path": "backend/con4old.py",
+      "ext": "py",
+      "sizeBytes": 2719,
+      "kind": "source",
+      "hash": "1bdb95714f52390337b76dd991636f9b19068d04"
+    },
+    {
+      "path": "backend/game/__init__.py",
+      "ext": "py",
+      "sizeBytes": 0,
+      "kind": "source",
+      "hash": "da39a3ee5e6b4b0d3255bfef95601890afd80709"
+    },
+    {
+      "path": "backend/game/ai.py",
+      "ext": "py",
+      "sizeBytes": 7875,
+      "kind": "source",
+      "hash": "4110122536bc8ed27c390512c2a25184b36ac5d0"
+    },
+    {
+      "path": "backend/game/connect4.py",
+      "ext": "py",
+      "sizeBytes": 4231,
+      "kind": "source",
+      "hash": "9710881bdff44dee751cae4e53b9ce3f1cd48a84"
+    },
+    {
+      "path": "backend/game/reversi.py",
+      "ext": "py",
+      "sizeBytes": 6559,
+      "kind": "source",
+      "hash": "a98988f284f12182fb21214b1755c601600d5334"
+    },
+    {
+      "path": "backend/game/reversi_ai.py",
+      "ext": "py",
+      "sizeBytes": 7733,
+      "kind": "source",
+      "hash": "8b373a4497c9283ba8846df6a64d24bf982a7241"
+    },
+    {
+      "path": "backend/game/tictactoe.py",
+      "ext": "py",
+      "sizeBytes": 3595,
+      "kind": "source",
+      "hash": "5fcb3ff67e5be60cc871b66d088a14bceebafeff"
+    },
+    {
+      "path": "backend/game/tictactoe_ai.py",
+      "ext": "py",
+      "sizeBytes": 5225,
+      "kind": "source",
+      "hash": "0ebbb58d27a9b3e670bc0e6a088fc91709cf0feb"
+    },
+    {
+      "path": "backend/requirements.txt",
+      "ext": "txt",
+      "sizeBytes": 101,
+      "kind": "doc",
+      "hash": "6e704fd376251ccf5aef3a31783262ea11080534"
+    },
+    {
+      "path": "backend/tests.py",
+      "ext": "py",
+      "sizeBytes": 5485,
+      "kind": "source",
+      "hash": "898aa3b00c1df0c1ffcf57d0aa81a2803737dbd5"
+    },
+    {
+      "path": "docs/ARCHITECTURE.md",
+      "ext": "md",
+      "language": "Markdown",
+      "sizeBytes": 6427,
+      "kind": "doc",
+      "hash": "e7f6c9a4fba0c09353d0a11a9d44ad28ea193c7a"
+    },
+    {
+      "path": "frontend/.env.example",
+      "ext": "example",
+      "sizeBytes": 117,
+      "kind": "config",
+      "hash": "b461ba4aec5bafcb2af50ae919f5d013abafe2d7"
+    },
+    {
+      "path": "frontend/.gitignore",
+      "ext": "gitignore",
+      "sizeBytes": 28,
+      "kind": "config",
+      "hash": "d63a0009a764367486771f7e14bbc8d097900599"
+    },
+    {
+      "path": "frontend/index.html",
+      "ext": "html",
+      "sizeBytes": 297,
+      "kind": "other",
+      "hash": "fc31dab62c883bf891e3782409c07cd1c445b306"
+    },
+    {
+      "path": "frontend/package-lock.json",
+      "ext": "json",
+      "language": "JSON",
+      "sizeBytes": 60559,
+      "kind": "config",
+      "hash": "a626f1557c717ac350007f5be4b35dac5bf87072"
+    },
+    {
+      "path": "frontend/package.json",
+      "ext": "json",
+      "language": "JSON",
+      "sizeBytes": 590,
+      "kind": "config",
+      "hash": "bc2033517c0e804c2522f886a6b145e7ee069365"
+    },
+    {
+      "path": "frontend/playwright-report/index.html",
+      "ext": "html",
+      "sizeBytes": 529396,
+      "kind": "other",
+      "hash": "eec66c8f9ef5b717e6f256f1c15b5f70f8d970d8"
+    },
+    {
+      "path": "frontend/playwright.config.ts",
+      "ext": "ts",
+      "language": "TypeScript",
+      "sizeBytes": 876,
+      "kind": "source",
+      "hash": "90211d18352beccc8e228e2e6a56fe1cf0bed5f4"
+    },
+    {
+      "path": "frontend/src/App.tsx",
+      "ext": "tsx",
+      "language": "TSX",
+      "sizeBytes": 22675,
+      "kind": "source",
+      "hash": "ad11c0070db6a87a8efd3f3ad79537514be14ac7"
+    },
+    {
+      "path": "frontend/src/api/games.ts",
+      "ext": "ts",
+      "language": "TypeScript",
+      "sizeBytes": 2234,
+      "kind": "source",
+      "hash": "34f8a14932dc825c6e15ff769fd1b1d2dc40ffa7"
+    },
+    {
+      "path": "frontend/src/components/ConnectFourBoard.tsx",
+      "ext": "tsx",
+      "language": "TSX",
+      "sizeBytes": 2057,
+      "kind": "source",
+      "hash": "f147995d62369cbb15f43d8dd39f781c943b0761"
+    },
+    {
+      "path": "frontend/src/components/ReversiBoard.tsx",
+      "ext": "tsx",
+      "language": "TSX",
+      "sizeBytes": 2154,
+      "kind": "source",
+      "hash": "7d05b593158f063449d474061168db42cc4525b7"
+    },
+    {
+      "path": "frontend/src/components/TicTacToeBoard.tsx",
+      "ext": "tsx",
+      "language": "TSX",
+      "sizeBytes": 1958,
+      "kind": "source",
+      "hash": "7d1e3de0ba9d0de7646ea533c1fe7f8c2f172c86"
+    },
+    {
+      "path": "frontend/src/games/connect4/types.ts",
+      "ext": "ts",
+      "language": "TypeScript",
+      "sizeBytes": 1817,
+      "kind": "source",
+      "hash": "36f339ab75de6b923ac21f7a50b9928931d8b85c"
+    },
+    {
+      "path": "frontend/src/games/registry.ts",
+      "ext": "ts",
+      "language": "TypeScript",
+      "sizeBytes": 1295,
+      "kind": "source",
+      "hash": "500c8266a69133b3545e5239cde6b224b56baea2"
+    },
+    {
+      "path": "frontend/src/lib/gameCopy.ts",
+      "ext": "ts",
+      "language": "TypeScript",
+      "sizeBytes": 1333,
+      "kind": "source",
+      "hash": "71fd9045d36ba5a43991700b36ff55ea38331861"
+    },
+    {
+      "path": "frontend/src/main.tsx",
+      "ext": "tsx",
+      "language": "TSX",
+      "sizeBytes": 239,
+      "kind": "source",
+      "hash": "b73fcd26447c0be057aa0368e13c0f9ea491be8d"
+    },
+    {
+      "path": "frontend/src/styles.css",
+      "ext": "css",
+      "sizeBytes": 17009,
+      "kind": "other",
+      "hash": "32f68e0395fd6094a4369108977b3d45dd7725c7"
+    },
+    {
+      "path": "frontend/src/vite-env.d.ts",
+      "ext": "ts",
+      "language": "TypeScript",
+      "sizeBytes": 38,
+      "kind": "source",
+      "hash": "e2eac6bcc8767d416f859eb09486cc8709de95a5"
+    },
+    {
+      "path": "frontend/test-results/.last-run.json",
+      "ext": "json",
+      "language": "JSON",
+      "sizeBytes": 45,
+      "kind": "config",
+      "hash": "bc5897d23b9ecb4feeb05860deff62e1c26e8003"
+    },
+    {
+      "path": "frontend/tests/smoke.spec.ts",
+      "ext": "ts",
+      "language": "TypeScript",
+      "sizeBytes": 3032,
+      "kind": "test",
+      "hash": "8458f61b852fa99ab147a75c5e71b17110f79288"
+    },
+    {
+      "path": "frontend/tsconfig.json",
+      "ext": "json",
+      "language": "JSON",
+      "sizeBytes": 527,
+      "kind": "config",
+      "hash": "91c12b94ef2ab720a5db53a6ab90bc6829ec7959"
+    },
+    {
+      "path": "package.json",
+      "ext": "json",
+      "language": "JSON",
+      "sizeBytes": 225,
+      "kind": "config",
+      "hash": "81901f851e0a2c3186e6aa9e6ff3cb9d3ac3fdc8"
+    },
+    {
+      "path": "scripts/smoke-production.mjs",
+      "ext": "mjs",
+      "language": "JavaScript",
+      "sizeBytes": 5094,
+      "kind": "source",
+      "hash": "41d71cf9f3329de10ffe3ce32cddbad69a55ecc3"
+    },
+    {
+      "path": "scripts/validate-local.mjs",
+      "ext": "mjs",
+      "language": "JavaScript",
+      "sizeBytes": 1246,
+      "kind": "source",
+      "hash": "a8a06a9e3e11384a8086b40b3e4893f516afa2b6"
+    },
+    {
+      "path": "vercel.json",
+      "ext": "json",
+      "language": "JSON",
+      "sizeBytes": 250,
+      "kind": "config",
+      "hash": "6c4cb41c5c0d412f559f9a087a81af0efad73c1f"
+    }
+  ],
+  "stack": {
+    "languages": [
+      "TypeScript",
+      "JavaScript"
+    ],
+    "frameworks": null,
+    "libraries": null,
+    "databases": null,
+    "testing": null,
+    "deployment": [
+      "Vercel"
+    ]
+  },
+  "packageInfo": {
+    "name": "boardarena",
+    "scripts": {
+      "smoke:production": "node scripts/smoke-production.mjs",
+      "validate:local": "node scripts/validate-local.mjs"
+    }
+  },
+  "env": {
+    "usesEnvVars": true,
+    "exampleFile": "frontend/.env.example",
+    "exampleVars": [
+      "ALLOWED_ORIGINS",
+      "APP_ENV",
+      "VITE_API_BASE_URL"
+    ],
+    "usedVars": [
+      {
+        "name": "CI",
+        "files": [
+          "frontend/playwright.config.ts"
+        ]
+      },
+      {
+        "name": "PUBLIC_API_BASE_URL",
+        "files": [
+          "scripts/smoke-production.mjs"
+        ]
+      },
+      {
+        "name": "PUBLIC_FRONTEND_URL",
+        "files": [
+          "scripts/smoke-production.mjs"
+        ]
+      },
+      {
+        "name": "VITE_API_BASE_URL",
+        "files": [
+          "frontend/src/api/games.ts"
+        ]
+      }
+    ],
+    "missingFromExample": [
+      "CI",
+      "PUBLIC_API_BASE_URL",
+      "PUBLIC_FRONTEND_URL"
+    ],
+    "envFilePresent": false
+  },
+  "routes": [
+    {
+      "method": "GET",
+      "path": "/api/health",
+      "sourceFile": "backend/app/main.py",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/health",
+      "sourceFile": "backend/app/main.py",
+      "confidence": "medium"
+    },
+    {
+      "method": "GET",
+      "path": "/{game_id}",
+      "sourceFile": "backend/app/api/routes/games.py",
+      "confidence": "medium"
+    },
+    {
+      "method": "POST",
+      "path": "/{game_id}/moves/ai",
+      "sourceFile": "backend/app/api/routes/games.py",
+      "confidence": "medium"
+    },
+    {
+      "method": "POST",
+      "path": "/{game_id}/moves/human",
+      "sourceFile": "backend/app/api/routes/games.py",
+      "confidence": "medium"
+    }
+  ],
+  "tests": {
+    "hasTestFiles": true,
+    "hasTestScript": false,
+    "frameworks": [
+      "Playwright"
+    ],
+    "testFiles": [
+      "frontend/tests/smoke.spec.ts"
+    ],
+    "playwrightDetected": true
+  },
+  "deployment": {
+    "hasReadme": true,
+    "readmeMentionsSetup": true,
+    "readmeMentionsDeploy": true,
+    "hasEnvExample": true,
+    "hasDockerfile": false,
+    "hasVercelConfig": true,
+    "hasHealthEndpoint": true,
+    "hasMigrationFiles": false,
+    "readmeMentionsMigrations": false,
+    "deploymentFiles": [
+      "vercel.json"
+    ]
+  },
+  "findings": [
+    {
+      "severity": "medium",
+      "category": "env",
+      "message": "Some environment variables used in code are missing from .env.example.",
+      "file": "frontend/.env.example",
+      "recommendation": "Document the missing variables in .env.example."
+    },
+    {
+      "severity": "low",
+      "category": "tests",
+      "message": "Test files exist, but no package test script was found.",
+      "file": "package.json",
+      "recommendation": "Add a test script so tests are easy to run locally and in CI."
+    }
+  ]
+}
