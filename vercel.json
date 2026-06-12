@@ -6,7 +6,7 @@
       "framework": "vite"
     },
     "backend": {
-      "root": "backend",
+      "root": ".",
       "routePrefix": "/_backend",
       "framework": "fastapi"
     }

@@ -42,6 +42,16 @@ def api_healthcheck() -> dict[str, str]:
     return health_payload()
 
 
+@app.get("/_backend/health")
+def prefixed_healthcheck() -> dict[str, str]:
+    return health_payload()
+
+
+@app.get("/_backend/api/health")
+def prefixed_api_healthcheck() -> dict[str, str]:
+    return health_payload()
+
+
 @app.exception_handler(Exception)
 async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONResponse:
     logger.exception("Unhandled API error for %s %s", request.method, request.url.path, exc_info=exc)
@@ -52,3 +62,4 @@ async def unhandled_exception_handler(request: Request, exc: Exception) -> JSONR
 
 
 app.include_router(games_router)
+app.include_router(games_router, prefix="/_backend")

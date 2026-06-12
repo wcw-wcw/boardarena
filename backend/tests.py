@@ -4,7 +4,7 @@ from backend.game.reversi import Reversi
 from backend.game.reversi_ai import choose_reversi_ai_move
 from backend.game.tictactoe import TicTacToe
 from backend.game.tictactoe_ai import choose_tictactoe_ai_move
-from backend.app.main import api_healthcheck, healthcheck
+from backend.app.main import api_healthcheck, healthcheck, prefixed_api_healthcheck, prefixed_healthcheck
 
 
 SMOKE_TESTS = []
@@ -17,7 +17,7 @@ def smoke_test(test_func):
 
 @smoke_test
 def test_health_response_safe():
-    for response in (healthcheck(), api_healthcheck()):
+    for response in (healthcheck(), api_healthcheck(), prefixed_healthcheck(), prefixed_api_healthcheck()):
         assert response["status"] == "ok"
         assert response["app"] == "BoardArena API"
         assert "environment" in response
